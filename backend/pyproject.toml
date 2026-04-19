@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "fastapi-postgis-app"
+version = "0.1.0"
+description = "FastAPI project with SQLAlchemy and PostGIS"
+authors = ["Your Name <you@example.com>"]
+packages = [
+    { include = "app" }
+]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.110.0"
+uvicorn = {extras = ["standard"], version = "^0.27.0"}
+sqlalchemy = "^2.0.27"
+psycopg2-binary = "^2.9.9"
+geoalchemy2 = "^0.14.3"
+pydantic-settings = "^2.2.1"
+alembic = "^1.13.1"
+shapely = "^2.0.2"
+scipy = "^1.11.4"
+pyproj = "^3.6.1"
+numpy = "^1.26.2"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

@@ -1,0 +1,10 @@
+node_modules
+dist
+.git
+.gitignore
+*.md
+Dockerfile
+.idea
+.vscode
+.eslint.config.js
+# package-lock.json лучше оставить для npm ci
