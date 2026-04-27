@@ -54,11 +54,13 @@ def process_recent_peaks(db: Session, window_seconds: float = 0.5):
     and starts triangulation.
     """
     # 1. Get the latest unprocessed peaks.
-    # Ideally, the Peak model should have a 'processed' field.
-    # For now, we'll just look at the latest peaks within the last N seconds.
-    # For demonstration, we'll take all peaks and try to group them.
-    
-    peaks = db.query(models.Peak).order_by(models.Peak.peak_time.desc()).limit(50).all()
+    peaks = (
+        db.query(models.Peak)
+        .filter(models.Peak.processed.is_(False))
+        .order_by(models.Peak.peak_time.desc())
+        .limit(50)
+        .all()
+    )
     if len(peaks) < 3:
         return
 
@@ -93,6 +95,9 @@ def process_recent_peaks(db: Session, window_seconds: float = 0.5):
             try:
                 # typing hint fix: pass explicitly as List[models.Peak]
                 perform_triangulation_for_event(db, current_event_peaks)
+                for peak in current_event_peaks:
+                    peak.processed = True
+                db.commit()
             except Exception as e:
                 logger.error(f"Error during triangulation: {e}")
 

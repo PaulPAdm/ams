@@ -21,7 +21,8 @@ class WavWriter:
 
     def create_file_name(self, device_id):
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        safe_id = str(device_id).replace('.', '_')
+        safe_id = "".join(c if c.isalnum() or c in ("-", "_") else "_" for c in str(device_id))
+        safe_id = safe_id.strip("_") or "unknown_device"
         return os.path.join(self.storage_path, f"record_{safe_id}_{timestamp}.wav")
 
     def save_raw_to_wav(self, raw_data, file_path):
@@ -62,6 +63,10 @@ class AudioStreamProcessor:
             logger.info(f"Started recording to {self.file_path} (Sample Rate: {self.writer.sample_rate})")
         except Exception as e:
             logger.error(f"Failed to open WAV file for writing: {e}")
+
+    @property
+    def is_open(self):
+        return self._is_open
 
     def write(self, data):
         """Write data to the WAV file and internal analysis buffer (sliding window)."""

@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from pydantic import Field
 from typing import Optional
 from datetime import datetime
 
@@ -7,7 +8,7 @@ class LocationBase(BaseModel):
     tag: Optional[str] = None
 
 class LocationCreate(LocationBase):
-    id: Optional[str] = None
+    id: Optional[str] = Field(default=None, min_length=1, max_length=64, pattern=r"^[A-Za-z0-9_-]+$")
     lat: float
     lon: float
 

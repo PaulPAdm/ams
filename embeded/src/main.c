@@ -35,7 +35,11 @@ int main()
                            RAW_AUDIO_SAMPLE_RATE_HZ,
                            AUDIO_STREAM_QUEUE_DOWNSAMPLE_FACTOR);
 
-    initialize_network();
+    if (initialize_network() != 0)
+    {
+        printf("Network initialization failed, stopping startup.\n");
+        return 1;
+    }
 
     while (connect_to_wifi(config.ssid, config.password) != 0)
     {
