@@ -135,8 +135,8 @@ def delete_location(
     if not db_obj:
         raise HTTPException(status_code=404, detail="Device not found")
     
-    # Note: Peaks associated with this device might cause foreign key constraint error 
-    # if not handled (on delete cascade). 
+    db.query(models.Peak).filter(models.Peak.device_id == id).delete(synchronize_session=False)
+    db.query(models.AudioRecord).filter(models.AudioRecord.device_id == id).delete(synchronize_session=False)
     db.delete(db_obj)
     db.commit()
     return db_obj
@@ -159,4 +159,3 @@ def init_device(
         "device_id": id,
         "server_time": datetime.now()
     }
-

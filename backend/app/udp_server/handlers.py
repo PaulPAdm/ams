@@ -121,6 +121,9 @@ class PacketHandler:
                 logger.info(f"New UDP audio stream for device {device_id} from {client_address}")
                 processor = AudioStreamProcessor(device_id)
                 processor.open()
+                if not processor.is_open:
+                    logger.error(f"Unable to start audio stream processor for device {device_id}")
+                    return
                 self.sessions[device_id] = [processor, time.time()]
                 # Save record to DB immediately so it shows up in recordings list
                 self._save_audio_record(device_id, processor.file_path)

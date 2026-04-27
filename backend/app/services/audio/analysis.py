@@ -2,6 +2,7 @@ import requests
 import logging
 import difflib
 import os
+import re
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -65,9 +66,11 @@ class AudioAnalysisService:
         for keyword in settings.HELP_KEYWORDS:
             kw = keyword.lower()
             
-            # 1. Direct substring match (covers "kill" in "killing")
-            if kw in text_lower:
-                logger.info(f"Help keyword detected (direct): '{keyword}' in text: '{text}'")
+            # 1. Match full word/phrase boundaries to avoid false positives like
+            # "kill" in "skill" or "fire" in "firewall".
+            kw_pattern = r"\b" + re.escape(kw) + r"\b"
+            if re.search(kw_pattern, text_lower):
+                logger.info(f"Help keyword detected (word-boundary): '{keyword}' in text: '{text}'")
                 return True
             
             # 2. Fuzzy match for each word in text (covers typos/misrecognition)
