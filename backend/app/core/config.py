@@ -1,7 +1,7 @@
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "FastAPI PostGIS App"
+    PROJECT_NAME: str = "AMS Backend"
     API_V1_STR: str = "/api"
     DATABASE_URL: str
     UDP_SERVER_HOST: str = "0.0.0.0"

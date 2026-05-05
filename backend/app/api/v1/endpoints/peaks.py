@@ -31,7 +31,7 @@ def create_peak(
     db.commit()
     db.refresh(db_obj)
     
-    # Trigger triangulation process (ideally in a background task)
+    # Run triangulation immediately after saving the peak.
     process_recent_peaks(db)
     
     return db_obj

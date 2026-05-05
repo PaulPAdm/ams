@@ -14,14 +14,8 @@ logger = logging.getLogger(__name__)
 # Sound speed in m/s
 V_SOUND = 343.0
 
-# Transformers to convert from WGS84 (degrees) to local projection (meters) and back.
-# In a real application, it is better to select the UTM zone by coordinates.
-# For simplicity, we use a general projection (Web Mercator or local EPSG).
-# EPSG:3857 is suitable for small distances worldwide but may have distortions.
-# EPSG:326XX (UTM) is better for precise measurements.
-# Here we will use a simplified approach or allow the user to configure the SRID.
 WGS84_SRID = 4326
-METRIC_SRID = 3857 # Web Mercator for example
+METRIC_SRID = 3857  # Metric projection used for triangulation math.
 
 transformer_to_metric = Transformer.from_crs(f"EPSG:{WGS84_SRID}", f"EPSG:{METRIC_SRID}", always_xy=True)
 transformer_to_wgs84 = Transformer.from_crs(f"EPSG:{METRIC_SRID}", f"EPSG:{WGS84_SRID}", always_xy=True)
@@ -64,8 +58,7 @@ def process_recent_peaks(db: Session, window_seconds: float = 0.5):
     if len(peaks) < 3:
         return
 
-    # Grouping peaks into "events"
-    # This is a simplified algorithm: take the freshest peak and search for others within window_seconds
+    # Group peaks into short-lived events starting from the freshest entries.
     processed_ids = set()
     
     for i in range(len(peaks)):
@@ -93,7 +86,6 @@ def process_recent_peaks(db: Session, window_seconds: float = 0.5):
         if len(current_event_peaks) >= 3:
             # Found an event for triangulation!
             try:
-                # typing hint fix: pass explicitly as List[models.Peak]
                 perform_triangulation_for_event(db, current_event_peaks)
                 for peak in current_event_peaks:
                     peak.processed = True

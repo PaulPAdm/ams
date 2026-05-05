@@ -9,7 +9,6 @@ from app.models import Base
 
 from app.udp_server.server import start_udp_server_thread
 
-# Table creation (Alembic is preferred for real projects)
 Base.metadata.create_all(bind=engine)
 
 import logging
@@ -36,7 +35,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
-    description="Sound source triangulation system based on Time Difference of Arrival (TDOA) with PostGIS",
+    description="Acoustic monitoring backend with UDP audio ingestion, Whisper analysis, and incident tracking",
     version="1.0.0",
     openapi_url=f"{settings.API_V1_STR}/openapi.json",
     docs_url=f"{settings.API_V1_STR}/docs",
@@ -62,7 +61,7 @@ app.include_router(api_router, prefix=settings.API_V1_STR)
 
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to FastAPI with PostGIS and SQLAlchemy (Refactored Structure)"}
+    return {"message": "AMS backend is running"}
 
 @app.get(f"{settings.API_V1_STR}/health")
 def healthcheck():

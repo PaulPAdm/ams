@@ -42,11 +42,10 @@ export function OperationsMap({
     return (
       <div className="map-placeholder">
         <div className="map-placeholder__content">
-          <span className="map-placeholder__eyebrow">Map unavailable</span>
-          <h2>Set `VITE_MAPBOX_TOKEN` to render the operational map.</h2>
+          <span className="map-placeholder__eyebrow">Map disabled</span>
+          <h2>Set <code>VITE_MAPBOX_TOKEN</code> to enable the operator map.</h2>
           <p>
-            The rest of the dashboard is live, but the basemap stays disabled until the token is
-            provided in the frontend environment.
+            The rest of the console works without the basemap.
           </p>
         </div>
       </div>

@@ -88,14 +88,14 @@ export function DashboardHeader({
         <MetricCard
           label="Simulation"
           value={simulationEnabled ? 'Armed' : 'Standby'}
-          hint="Tap the map to inject a test event"
+          hint="Click the map to simulate an incident"
           tone={simulationEnabled ? 'danger' : 'default'}
         />
       </div>
 
       <div className="dashboard-header__footnote">
         <Activity size={14} />
-        <span>Single-page operator console rebuilt into app / shared / entities / features / widgets.</span>
+        <span>Operator console with live API data, admin tools, and local simulation.</span>
       </div>
     </Panel>
   );

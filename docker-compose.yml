@@ -47,7 +47,7 @@ services:
 
   frontend-main:
     build:
-      context: ./fronend-main
+      context: ./frontend
     restart: unless-stopped
 
   gateway:

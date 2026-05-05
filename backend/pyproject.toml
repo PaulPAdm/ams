@@ -1,8 +1,7 @@
 [tool.poetry]
-name = "fastapi-postgis-app"
+name = "ams-backend"
 version = "0.1.0"
-description = "FastAPI project with SQLAlchemy and PostGIS"
-authors = ["Your Name <you@example.com>"]
+description = "Backend for the acoustic monitoring system"
 packages = [
     { include = "app" }
 ]
