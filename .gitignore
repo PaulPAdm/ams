@@ -19,6 +19,43 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Documentation outputs / caches
+/site/
+/docs/_build/
+/docs/build/
+/docs/site/
+/docs/.cache/
+/docs/cache/
+/docs/logs/
+/docs/tmp/
+/docs/temp/
+/docs/.doctrees/
+/docs/.quarto/
+/docs/_freeze/
+/docs/.jupyter_cache/
+/docs/**/.ipynb_checkpoints/
+/docs/**/.plantuml/
+/docs/**/plantuml-cache/
+/docs/**/*.log
+/docs/**/*.tmp
+/docs/**/*.bak
+/docs/**/*.aux
+/docs/**/*.bbl
+/docs/**/*.bcf
+/docs/**/*.blg
+/docs/**/*.fdb_latexmk
+/docs/**/*.fls
+/docs/**/*.lof
+/docs/**/*.lot
+/docs/**/*.out
+/docs/**/*.run.xml
+/docs/**/*.synctex.gz
+/docs/**/*.toc
+/docs/**/*.xdv
+/docs/**/*.nav
+/docs/**/*.snm
+/docs/**/*.vrb
+
 # Python / backend
 **/__pycache__/
 **/*.py[cod]
