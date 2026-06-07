@@ -1,4 +1,4 @@
-from sqlalchemy import BigInteger, Boolean, Column, Float, ForeignKey, Integer, String
+from sqlalchemy import BigInteger, Boolean, Column, Float, ForeignKey, Index, Integer, String
 
 from app.core.time_utils import epoch_ns
 from app.db.base_class import Base
@@ -6,6 +6,9 @@ from app.db.base_class import Base
 
 class DeviceHealthReport(Base):
     __tablename__ = "device_health_reports"
+    __table_args__ = (
+        Index("ix_device_health_reports_device_id_received_at_ns", "device_id", "received_at_ns"),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
     device_id = Column(String, ForeignKey("location.id", ondelete="CASCADE"), index=True, nullable=False)

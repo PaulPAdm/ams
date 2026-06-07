@@ -4,12 +4,12 @@ from pydantic import BaseModel, Field
 
 
 class SoundEventBase(BaseModel):
-    event_time_ns: int = Field(..., description="Exact UTC time of the detected acoustic peak, in nanoseconds.")
-    duration_ms: int = 10000
-    pre_event_ms: int = 5000
-    post_event_ms: int = 5000
-    sample_rate_hz: int = 16000
-    channels: int = 1
+    event_time_ns: int = Field(..., gt=0, description="Exact UTC time of the detected acoustic peak, in nanoseconds.")
+    duration_ms: int = Field(default=10000, ge=0)
+    pre_event_ms: int = Field(default=5000, ge=0)
+    post_event_ms: int = Field(default=5000, ge=0)
+    sample_rate_hz: int = Field(default=16000, ge=1, le=384000)
+    channels: int = Field(default=1, ge=1, le=8)
     sample_format: str = "pcm16le"
     peak_level: Optional[float] = None
     rms_level: Optional[float] = None

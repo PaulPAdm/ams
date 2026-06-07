@@ -156,7 +156,41 @@ def list_devices(
     Retrieve a list of all registered devices with their coordinates.
     """
     devices = db.query(models.Location).offset(skip).limit(limit).all()
-    return [_attach_status(db, device) for device in devices]
+    if not devices:
+        return []
+
+    device_ids = [d.id for d in devices]
+
+    health_rows = (
+        db.query(models.DeviceHealthReport)
+        .filter(models.DeviceHealthReport.device_id.in_(device_ids))
+        .order_by(models.DeviceHealthReport.received_at_ns.desc())
+        .all()
+    )
+    latest_health: dict = {}
+    for row in health_rows:
+        if row.device_id not in latest_health:
+            latest_health[row.device_id] = row
+
+    sync_rows = (
+        db.query(models.DeviceTimeSyncEvent)
+        .filter(models.DeviceTimeSyncEvent.device_id.in_(device_ids))
+        .order_by(models.DeviceTimeSyncEvent.created_at_ns.desc())
+        .all()
+    )
+    latest_sync: dict = {}
+    for row in sync_rows:
+        if row.device_id not in latest_sync:
+            latest_sync[row.device_id] = row
+
+    result = []
+    for device in devices:
+        _attach_coordinates(device)
+        device.latest_health = latest_health.get(device.id)
+        device.latest_time_sync = latest_sync.get(device.id)
+        result.append(device)
+
+    return result
 
 @router.put("/{device_id}", response_model=schemas.Location, summary="Update device")
 def update_device(

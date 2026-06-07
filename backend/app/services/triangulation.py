@@ -84,12 +84,14 @@ def process_recent_peaks(db: Session, window_seconds: float = 0.5):
                 processed_ids.add(peaks[j].id)
         
         if len(current_event_peaks) >= 3:
-            # Found an event for triangulation!
+            # Mark as processed before triangulating to prevent double-processing
+            # under concurrent calls.
+            for peak in current_event_peaks:
+                peak.processed = True
+            db.commit()
+
             try:
                 perform_triangulation_for_event(db, current_event_peaks)
-                for peak in current_event_peaks:
-                    peak.processed = True
-                db.commit()
             except Exception as e:
                 logger.error(f"Error during triangulation: {e}")
 
