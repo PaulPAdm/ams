@@ -5,7 +5,7 @@ import { useIncidentFeed } from '@/entities/incident/model/useIncidentFeed';
 import { useIncidentNotifications } from '@/entities/incident/model/useIncidentNotifications';
 import { useSensors } from '@/entities/sensor/model/useSensors';
 import { SensorDetailsDrawer } from '@/entities/sensor/ui/SensorDetailsDrawer';
-import { listDeviceSoundEvents } from '@/entities/sound-event/api/soundEventApi';
+import { listDeviceSoundEvents, uploadSoundEventAudioFile } from '@/entities/sound-event/api/soundEventApi';
 import { OperationsMap } from '@/widgets/operations-map/OperationsMap';
 import { NotificationStack } from '@/widgets/operations-notifications/NotificationStack';
 
@@ -45,6 +45,7 @@ export function OperationsConsole({ onOpenAdmin }) {
     error: null,
     isLoading: false,
     items: [],
+    uploadingEventId: null,
   });
 
   const {
@@ -74,7 +75,7 @@ export function OperationsConsole({ onOpenAdmin }) {
 
   const loadSelectedSensorEvents = useCallback(async (deviceId, options = {}) => {
     if (!deviceId) {
-      setSoundEventsState({ error: null, isLoading: false, items: [] });
+      setSoundEventsState({ error: null, isLoading: false, items: [], uploadingEventId: null });
       return;
     }
 
@@ -94,6 +95,7 @@ export function OperationsConsole({ onOpenAdmin }) {
         error: null,
         isLoading: false,
         items,
+        uploadingEventId: null,
       });
     } catch (error) {
       if (error.name === 'AbortError') {
@@ -104,13 +106,14 @@ export function OperationsConsole({ onOpenAdmin }) {
         ...currentState,
         error,
         isLoading: false,
+        uploadingEventId: null,
       }));
     }
   }, []);
 
   useEffect(() => {
     if (!selectedSensorId) {
-      setSoundEventsState({ error: null, isLoading: false, items: [] });
+      setSoundEventsState({ error: null, isLoading: false, items: [], uploadingEventId: null });
       return undefined;
     }
 
@@ -123,6 +126,29 @@ export function OperationsConsole({ onOpenAdmin }) {
   const clearMapSelection = () => {
     setSelectedIncidentId(null);
     setSelectedSensorId(null);
+  };
+
+  const uploadSelectedSensorEventAudio = async (eventId, file) => {
+    if (!selectedSensor?.id || !eventId || !file) {
+      return;
+    }
+
+    setSoundEventsState((currentState) => ({
+      ...currentState,
+      error: null,
+      uploadingEventId: eventId,
+    }));
+
+    try {
+      await uploadSoundEventAudioFile(selectedSensor.id, eventId, file);
+      await loadSelectedSensorEvents(selectedSensor.id);
+    } catch (error) {
+      setSoundEventsState((currentState) => ({
+        ...currentState,
+        error,
+        uploadingEventId: null,
+      }));
+    }
   };
 
   const hideIncident = (incident) => {
@@ -179,6 +205,7 @@ export function OperationsConsole({ onOpenAdmin }) {
         soundEventsState={soundEventsState}
         onClose={() => setSelectedSensorId(null)}
         onRefreshSoundEvents={() => loadSelectedSensorEvents(selectedSensor?.id)}
+        onUploadSoundEventAudio={uploadSelectedSensorEventAudio}
       />
 
       <NotificationStack

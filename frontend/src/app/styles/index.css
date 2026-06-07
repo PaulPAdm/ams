@@ -661,6 +661,11 @@ button {
   background: rgba(255, 255, 255, 0.03);
 }
 
+.sensor-sound-events__details {
+  min-width: 0;
+  flex: 1;
+}
+
 .sensor-sound-events__item strong {
   display: block;
   margin-bottom: 7px;
@@ -674,6 +679,29 @@ button {
   color: var(--text-muted);
   font-size: 0.78rem;
   line-height: 1.45;
+}
+
+.sensor-sound-events__player {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  height: 36px;
+}
+
+.sensor-sound-events__actions {
+  display: inline-flex;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.sensor-sound-events__upload-input {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .admin-console {
@@ -884,6 +912,12 @@ button {
   background: rgba(255, 122, 89, 0.1);
 }
 
+.icon-button--disabled {
+  cursor: wait;
+  opacity: 0.62;
+  pointer-events: none;
+}
+
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -998,6 +1032,16 @@ button {
   box-shadow: 0 0 0 3px rgba(125, 211, 252, 0.08);
 }
 
+.admin-form__error {
+  color: #ef4444;
+  font-size: 13px;
+  margin: 0;
+  padding: 8px 12px;
+  background: rgba(239, 68, 68, 0.08);
+  border-radius: 6px;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
 .admin-form__actions {
   display: flex;
   justify-content: flex-end;
@@ -1059,6 +1103,11 @@ button {
   background: rgba(255, 255, 255, 0.03);
 }
 
+.drawer-list__content {
+  min-width: 0;
+  flex: 1;
+}
+
 .drawer-list__item strong {
   display: block;
   margin-bottom: 8px;
@@ -1070,6 +1119,13 @@ button {
   gap: 10px 16px;
   color: var(--text-muted);
   font-size: 0.82rem;
+}
+
+.drawer-list__audio {
+  display: block;
+  width: 100%;
+  height: 36px;
+  margin-top: 10px;
 }
 
 .is-spinning {
@@ -1172,7 +1228,12 @@ button {
   }
 
   .side-drawer__header,
-  .drawer-list__item {
+  .drawer-list__item,
+  .sensor-sound-events__item {
     flex-direction: column;
+  }
+
+  .sensor-sound-events__actions {
+    justify-content: flex-start;
   }
 }
