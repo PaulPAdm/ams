@@ -116,6 +116,7 @@ Frontend korzysta głównie z:
 - `GET /api/devices` - lista czujników i ich ostatni status,
 - `GET /api/suspicious_incidents` - lista incydentów na mapie,
 - `GET /api/devices/{device_id}/sound-events` - zdarzenia wybranego czujnika,
+- `POST /api/devices/{device_id}/sound-events/{event_id}/audio` - upload pliku audio dla zdarzenia,
 - `GET /api/health` - stan backendu.
 
 ## Uwagi

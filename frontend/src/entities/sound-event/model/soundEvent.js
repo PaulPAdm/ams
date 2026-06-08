@@ -33,6 +33,8 @@ export function mapSoundEvent(rawEvent) {
     noiseFloor: toNumberOrNull(rawEvent.noise_floor),
     audioUploaded: Boolean(rawEvent.audio_uploaded),
     audioDownloadUrl: rawEvent.audio_download_url || null,
+    audioContentType: rawEvent.audio_content_type || null,
+    audioSizeBytes: toNumberOrNull(rawEvent.audio_size_bytes),
     label: rawEvent.detection_label || 'impulse',
   };
 }

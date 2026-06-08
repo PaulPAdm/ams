@@ -1,8 +1,23 @@
 import { Map, NavigationControl } from 'react-map-gl';
+import mapboxgl from 'mapbox-gl';
 import { appConfig, isMapConfigured } from '@/app/config/env';
 import { IncidentMarker } from '@/entities/incident/ui/IncidentMarker';
 import { IncidentPopup } from '@/entities/incident/ui/IncidentPopup';
 import { SensorMarker } from '@/entities/sensor/ui/SensorMarker';
+
+const isMapSupported = typeof window !== 'undefined' && mapboxgl.supported();
+
+function MapPlaceholder({ eyebrow, title, message }) {
+  return (
+    <div className="map-placeholder">
+      <div className="map-placeholder__content">
+        <span className="map-placeholder__eyebrow">{eyebrow}</span>
+        <h2>{title}</h2>
+        <p>{message}</p>
+      </div>
+    </div>
+  );
+}
 
 export function OperationsMap({
   incidents,
@@ -18,15 +33,21 @@ export function OperationsMap({
 }) {
   if (!isMapConfigured) {
     return (
-      <div className="map-placeholder">
-        <div className="map-placeholder__content">
-          <span className="map-placeholder__eyebrow">Map disabled</span>
-          <h2>Set <code>VITE_MAPBOX_TOKEN</code> to enable the operator map.</h2>
-          <p>
-            The rest of the console works without the basemap.
-          </p>
-        </div>
-      </div>
+      <MapPlaceholder
+        eyebrow="Map disabled"
+        title="Map configuration is missing."
+        message="The rest of the console works without the basemap."
+      />
+    );
+  }
+
+  if (!isMapSupported) {
+    return (
+      <MapPlaceholder
+        eyebrow="Map unavailable"
+        title="This browser cannot render the operator map."
+        message="Sensor and incident data remain available in the side panels."
+      />
     );
   }
 

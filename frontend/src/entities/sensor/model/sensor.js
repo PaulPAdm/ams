@@ -1,3 +1,5 @@
+import { toBoolOrNull } from '@/shared/lib/format';
+
 const clampBattery = (value) => {
   const parsed = Number(value);
 
@@ -42,7 +44,7 @@ const mapLatestHealth = (rawHealth) => {
     computedPowerMw: toNumberOrNull(rawHealth.computed_power_mw),
     wifiConnected: rawHealth.wifi_connected,
     microphoneActive: rawHealth.microphone_active,
-    ina219Online: rawHealth.ina219_online,
+    ina219Online: toBoolOrNull(rawHealth.ina219_online),
     audioQueueDepth: toNumberOrNull(rawHealth.audio_queue_depth),
     audioDroppedChunks: toNumberOrNull(rawHealth.audio_dropped_chunks),
   };

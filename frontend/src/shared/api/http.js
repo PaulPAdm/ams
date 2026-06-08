@@ -83,6 +83,37 @@ export function postJson(path, body, options = {}) {
   });
 }
 
+export async function requestFormData(path, options = {}) {
+  const { body, headers, method = 'POST', params, signal } = options;
+  const response = await fetch(buildApiUrl(path, params), {
+    method,
+    headers: {
+      Accept: 'application/json',
+      ...headers,
+    },
+    body,
+    signal,
+  });
+
+  if (!response.ok) {
+    const errorPayload = await parseResponse(response);
+    const message = typeof errorPayload === 'string'
+      ? errorPayload
+      : errorPayload?.detail || `Request failed with ${response.status}`;
+    throw new Error(message);
+  }
+
+  return parseResponse(response);
+}
+
+export function postFormData(path, body, options = {}) {
+  return requestFormData(path, {
+    ...options,
+    method: 'POST',
+    body,
+  });
+}
+
 export function putJson(path, body, options = {}) {
   return requestJson(path, {
     ...options,

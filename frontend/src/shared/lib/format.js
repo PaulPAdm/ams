@@ -75,7 +75,7 @@ export function formatPercent(value) {
 
 export function formatVoltage(value) {
   if (!Number.isFinite(value)) {
-    return '-- V';
+    return 'Unknown';
   }
 
   return `${value.toFixed(2)} V`;
@@ -83,7 +83,7 @@ export function formatVoltage(value) {
 
 export function formatCurrent(value) {
   if (!Number.isFinite(value)) {
-    return '-- mA';
+    return 'Unknown';
   }
 
   return `${Math.round(value)} mA`;
@@ -91,8 +91,51 @@ export function formatCurrent(value) {
 
 export function formatPower(value) {
   if (!Number.isFinite(value)) {
-    return '-- mW';
+    return 'Unknown';
   }
 
   return `${Math.round(value)} mW`;
+}
+
+export function formatBytes(value) {
+  if (!Number.isFinite(value) || value <= 0) {
+    return null;
+  }
+
+  if (value < 1024) {
+    return `${value} B`;
+  }
+
+  if (value < 1024 * 1024) {
+    return `${(value / 1024).toFixed(1)} KB`;
+  }
+
+  return `${(value / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+const UNKNOWN_VALUES = new Set(['', 'unknown', 'unknow', 'n/a', 'na', 'none', 'null']);
+
+export function toBoolOrNull(value) {
+  if (typeof value === 'boolean') {
+    return value;
+  }
+
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  const normalized = String(value).trim().toLowerCase();
+  if (UNKNOWN_VALUES.has(normalized)) {
+    return null;
+  }
+
+  if (normalized === 'true') {
+    return true;
+  }
+
+  if (normalized === 'false') {
+    return false;
+  }
+
+  return null;
 }

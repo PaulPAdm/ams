@@ -17,10 +17,18 @@ const renderBatteryState = (device) => {
     return <span className="muted-copy">No report</span>;
   }
 
+  const powerUnknown =
+    health.ina219Online === null &&
+    health.busVoltageV === null &&
+    health.currentMa === null &&
+    health.powerMw === null;
+
   return (
     <div className="admin-telemetry-cell">
-      <span>{formatVoltage(health.busVoltageV)} / {formatCurrent(health.currentMa)}</span>
-      <span>{formatPower(health.powerMw)} · {health.statusMessage || 'ok'}</span>
+      <span>
+        {powerUnknown ? 'Power: Unknown' : `${formatVoltage(health.busVoltageV)} / ${formatCurrent(health.currentMa)}`}
+      </span>
+      <span>{powerUnknown ? 'INA219: Unknown' : formatPower(health.powerMw)} · {health.statusMessage || 'ok'}</span>
     </div>
   );
 };
@@ -94,7 +102,7 @@ export function DeviceRegistryPanel({
                 <td>{renderBatteryState(device)}</td>
                 <td className="align-right">
                   <div className="admin-icon-actions">
-                    <button type="button" className="icon-button" title="Open audio records" onClick={() => onOpenAudio(device.id)}>
+                    <button type="button" className="icon-button" title="Open acoustic events" onClick={() => onOpenAudio(device.id)}>
                       <AudioLines size={16} />
                     </button>
                     <button type="button" className="icon-button" title="Open peaks" onClick={() => onOpenPeaks(device.id)}>

@@ -1,7 +1,8 @@
-import { Battery, Download, MapPin, Mic, RefreshCw, Tag, Volume2, X } from 'lucide-react';
+import { Battery, Download, MapPin, Mic, RefreshCw, Tag, Upload, Volume2, X } from 'lucide-react';
 import { getSensorLocationSummary } from '@/entities/sensor/model/sensor';
 import { getSoundEventAudioUrl } from '@/entities/sound-event/api/soundEventApi';
 import {
+  formatBytes,
   formatCoordinate,
   formatCurrent,
   formatPower,
@@ -9,11 +10,31 @@ import {
   formatVoltage,
 } from '@/shared/lib/format';
 
+const AUDIO_FILE_ACCEPT = [
+  'audio/wav',
+  'audio/mpeg',
+  'audio/ogg',
+  'audio/flac',
+  'audio/mp4',
+  'audio/aac',
+  'audio/webm',
+  '.wav',
+  '.mp3',
+  '.ogg',
+  '.oga',
+  '.flac',
+  '.m4a',
+  '.mp4',
+  '.aac',
+  '.webm',
+].join(',');
+
 export function SensorDetailsDrawer({
   sensor,
   soundEventsState = { error: null, isLoading: false, items: [] },
   onClose,
   onRefreshSoundEvents,
+  onUploadSoundEventAudio,
 }) {
   if (!sensor) {
     return null;
@@ -22,6 +43,21 @@ export function SensorDetailsDrawer({
   const coordinates = `${formatCoordinate(sensor.lat)}, ${formatCoordinate(sensor.lng)}`;
   const latestHealth = sensor.latestHealth;
   const latestTimeSync = sensor.latestTimeSync;
+  const powerUnknown =
+    latestHealth?.ina219Online === null &&
+    latestHealth?.busVoltageV === null &&
+    latestHealth?.currentMa === null &&
+    latestHealth?.powerMw === null;
+  const handleAudioUploadChange = (soundEvent, changeEvent) => {
+    const file = changeEvent.target.files?.[0];
+    changeEvent.target.value = '';
+
+    if (!file || !onUploadSoundEventAudio) {
+      return;
+    }
+
+    onUploadSoundEventAudio(soundEvent.id, file);
+  };
 
   return (
     <aside className="sensor-details-drawer" aria-label="Device details">
@@ -73,7 +109,9 @@ export function SensorDetailsDrawer({
           <dd>
             {latestHealth ? (
               <>
-                {formatVoltage(latestHealth.busVoltageV)} / {formatCurrent(latestHealth.currentMa)} / {formatPower(latestHealth.powerMw)}
+                {powerUnknown
+                  ? 'Power: Unknown'
+                  : `${formatVoltage(latestHealth.busVoltageV)} / ${formatCurrent(latestHealth.currentMa)} / ${formatPower(latestHealth.powerMw)}`}
                 <br />
                 <span className="sensor-details-list__hint">
                   {latestHealth.statusMessage || 'ok'}; received {formatPreciseDateTime(latestHealth.receivedAt)}
@@ -135,29 +173,53 @@ export function SensorDetailsDrawer({
 
         {soundEventsState.items.length ? (
           <div className="sensor-sound-events__list">
-            {soundEventsState.items.map((event) => {
-              const audioUrl = getSoundEventAudioUrl(event);
+            {soundEventsState.items.map((soundEvent) => {
+              const audioUrl = getSoundEventAudioUrl(soundEvent);
+              const isUploading = soundEventsState.uploadingEventId === soundEvent.id;
+              const audioSize = formatBytes(soundEvent.audioSizeBytes);
 
               return (
-                <article key={event.id} className="sensor-sound-events__item">
-                  <div>
-                    <strong>{formatPreciseDateTime(event.eventTime)}</strong>
+                <article key={soundEvent.id} className="sensor-sound-events__item">
+                  <div className="sensor-sound-events__details">
+                    <strong>{formatPreciseDateTime(soundEvent.eventTime)}</strong>
                     <div className="sensor-sound-events__meta">
-                      <span>ID: {event.id}</span>
-                      <span>Peak: {event.peakLevel ?? 'n/a'}</span>
-                      <span>RMS: {event.rmsLevel ?? 'n/a'}</span>
+                      <span>ID: {soundEvent.id}</span>
+                      <span>Peak: {soundEvent.peakLevel ?? 'n/a'}</span>
+                      <span>RMS: {soundEvent.rmsLevel ?? 'n/a'}</span>
                     </div>
                     <div className="sensor-sound-events__meta">
-                      <span>Received: {formatPreciseDateTime(event.receivedAt)}</span>
-                      <span>{event.audioUploaded ? 'Audio uploaded' : 'No audio'}</span>
+                      <span>Received: {formatPreciseDateTime(soundEvent.receivedAt)}</span>
+                      <span>{soundEvent.audioUploaded ? 'Audio uploaded' : 'No audio'}</span>
+                      {soundEvent.audioContentType ? <span>{soundEvent.audioContentType}</span> : null}
+                      {audioSize ? <span>{audioSize}</span> : null}
                     </div>
+                    {audioUrl ? (
+                      <audio className="sensor-sound-events__player" controls preload="none" src={audioUrl} />
+                    ) : null}
                   </div>
 
-                  {audioUrl ? (
-                    <a className="icon-button" href={audioUrl} download title="Download event audio">
-                      <Download size={16} />
-                    </a>
-                  ) : null}
+                  <div className="sensor-sound-events__actions">
+                    {audioUrl ? (
+                      <a className="icon-button" href={audioUrl} download title="Download event audio">
+                        <Download size={16} />
+                      </a>
+                    ) : null}
+
+                    <label
+                      className={`icon-button${isUploading ? ' icon-button--disabled' : ''}`}
+                      aria-disabled={isUploading}
+                      title="Upload audio file"
+                    >
+                      {isUploading ? <RefreshCw size={16} className="is-spinning" /> : <Upload size={16} />}
+                      <input
+                        className="sensor-sound-events__upload-input"
+                        type="file"
+                        accept={AUDIO_FILE_ACCEPT}
+                        disabled={isUploading}
+                        onChange={(changeEvent) => handleAudioUploadChange(soundEvent, changeEvent)}
+                      />
+                    </label>
+                  </div>
                 </article>
               );
             })}
