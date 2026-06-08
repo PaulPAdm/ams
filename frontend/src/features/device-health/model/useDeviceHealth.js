@@ -74,6 +74,8 @@ export function useDeviceHealth() {
 
   useEffect(() => {
     const controller = new AbortController();
+    // Intentional load-start on device change; resolution updates state in callbacks.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadReports(selectedDeviceId, controller.signal);
     return () => controller.abort();
   }, [loadReports, selectedDeviceId]);
