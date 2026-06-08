@@ -13,6 +13,7 @@ int initialize_network(void)
     }
 
     cyw43_arch_enable_sta_mode();
+    cyw43_wifi_pm(&cyw43_state, CYW43_PERFORMANCE_PM);
     return 0;
 }
 

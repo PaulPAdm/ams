@@ -18,6 +18,8 @@ void runtime_status_publish(const device_config_t *config,
                             device_wifi_state_t wifi_state,
                             bool microphone_ready);
 
+void runtime_status_set_sd_card_state(device_component_state_t sd_card_state);
+
 void runtime_iteration_run(const device_config_t *config,
                            diagnostics_service_t *diagnostics_service,
                            power_meter_service_t *power_meter_service,

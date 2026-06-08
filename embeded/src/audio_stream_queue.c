@@ -21,6 +21,7 @@ static const q31_t AUDIO_DECIMATOR_COEFFS[AUDIO_STREAM_QUEUE_DECIMATOR_TAPS] = {
 
 static q15_t g_audio_queue[AUDIO_STREAM_QUEUE_SLOTS][AUDIO_STREAM_QUEUE_CHUNK_SAMPLES];
 static uint16_t g_audio_queue_samples[AUDIO_STREAM_QUEUE_SLOTS];
+static uint64_t g_audio_capture_us[AUDIO_STREAM_QUEUE_SLOTS];
 static q15_t g_pending_chunk[AUDIO_STREAM_QUEUE_CHUNK_SAMPLES];
 static q15_t g_dsp_frame_queue[AUDIO_DSP_FRAME_SLOTS][AUDIO_DSP_FRAME_SAMPLES];
 static uint16_t g_dsp_frame_samples[AUDIO_DSP_FRAME_SLOTS];
@@ -167,15 +168,17 @@ static bool validate_dsp_frame_output(const audio_dsp_frame_view_t *frame,
     return true;
 }
 
-static void commit_pending_chunk(void)
+static uint64_t g_pending_chunk_capture_us = 0;
+
+static void commit_pending_chunk(uint64_t captured_at_us)
 {
     commit_pending_samples(g_pending_chunk,
                            &g_pending_count,
                            AUDIO_STREAM_QUEUE_CHUNK_SAMPLES,
                            &g_audio_queue[0][0],
                            g_audio_queue_samples,
-                           NULL,
-                           0,
+                           g_audio_capture_us,
+                           captured_at_us,
                            &g_audio_write_idx,
                            &g_audio_count,
                            &g_audio_dropped,
@@ -197,12 +200,16 @@ static void commit_pending_dsp_frame(uint64_t captured_at_us)
                            AUDIO_DSP_FRAME_SLOTS);
 }
 
-static void append_output_sample(q15_t sample)
+static void append_output_sample(q15_t sample, uint64_t captured_at_us)
 {
     g_pending_chunk[g_pending_count++] = sample;
+    if (g_pending_count == 1u)
+    {
+        g_pending_chunk_capture_us = captured_at_us;
+    }
     if (g_pending_count >= AUDIO_STREAM_QUEUE_CHUNK_SAMPLES)
     {
-        commit_pending_chunk();
+        commit_pending_chunk(g_pending_chunk_capture_us);
     }
 
     g_pending_dsp_frame[g_pending_dsp_count++] = sample;
@@ -212,6 +219,7 @@ void audio_stream_queue_init(void)
 {
     memset(g_audio_queue, 0, sizeof(g_audio_queue));
     memset(g_audio_queue_samples, 0, sizeof(g_audio_queue_samples));
+    memset(g_audio_capture_us, 0, sizeof(g_audio_capture_us));
     memset(g_dsp_frame_queue, 0, sizeof(g_dsp_frame_queue));
     memset(g_dsp_frame_samples, 0, sizeof(g_dsp_frame_samples));
     memset(g_dsp_frame_capture_us, 0, sizeof(g_dsp_frame_capture_us));
@@ -259,7 +267,7 @@ void audio_stream_queue_push_from_buffer(const int32_t *buffer, size_t words, ui
 
     for (size_t i = 0; i < AUDIO_STREAM_QUEUE_DECIMATOR_OUTPUT_SAMPLES; ++i)
     {
-        append_output_sample(g_decimator_pcm[i]);
+        append_output_sample(g_decimator_pcm[i], captured_at_us);
         if (g_pending_dsp_count >= AUDIO_DSP_FRAME_SAMPLES)
         {
             commit_pending_dsp_frame(captured_at_us);
@@ -278,16 +286,17 @@ bool audio_stream_queue_peek(audio_chunk_view_t *chunk)
 
     chunk->slot = 0;
     chunk->sample_count = 0;
+    chunk->captured_at_us = 0;
     chunk->samples = NULL;
 
     const q15_t *samples = NULL;
     if (!peek_queue_samples(&chunk->slot,
                             &chunk->sample_count,
                             &samples,
-                            NULL,
+                            &chunk->captured_at_us,
                             &g_audio_queue[0][0],
                             g_audio_queue_samples,
-                            NULL,
+                            g_audio_capture_us,
                             &g_audio_read_idx,
                             &g_audio_count,
                             AUDIO_STREAM_QUEUE_CHUNK_SAMPLES))

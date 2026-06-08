@@ -81,13 +81,13 @@ static bool server_health_start_request(server_health_service_t *service,
     service->active_request = kind;
 
     cyw43_arch_lwip_begin();
-    err_t err = httpc_get_file(&service->server_addr,
-                               SERVER_HEALTH_HTTP_PORT,
-                               uri,
-                               &service->connection_settings,
-                               server_health_recv_callback,
-                               service,
-                               &service->connection);
+    err_t err = httpc_get_file_dns(service->server_ip,
+                                   SERVER_HEALTH_HTTP_PORT,
+                                   uri,
+                                   &service->connection_settings,
+                                   server_health_recv_callback,
+                                   service,
+                                   &service->connection);
     cyw43_arch_lwip_end();
 
     if (err != ERR_OK)
@@ -113,31 +113,47 @@ static void server_health_try_report(server_health_service_t *service,
     bool ina219_online = power_meter_service_is_sensor_online(power_meter_service);
 
     const char *status_message = service->microphone_active ? "streaming" : "network_ready";
-    float bus_voltage_v = has_reading ? reading.bus_voltage_v : 0.0f;
-    float shunt_voltage_mv = has_reading ? reading.shunt_voltage_mv : 0.0f;
-    float current_ma = has_reading ? reading.current_ma : 0.0f;
-    float power_mw = has_reading ? reading.power_mw : 0.0f;
-    float computed_power_mw = has_reading ? reading.computed_power_mw : 0.0f;
 
     char uri[SERVER_HEALTH_URI_MAX];
-    int written = snprintf(
-        uri,
-        sizeof(uri),
-        "/api/devices/%s/health/report?firmware_version=%s&status_message=%s&uptime_ms=%llu&wifi_connected=%s&microphone_active=%s&ina219_online=%s&bus_voltage_v=%.3f&shunt_voltage_mv=%.3f&current_ma=%.3f&power_mw=%.3f&computed_power_mw=%.3f&audio_queue_depth=%u&audio_dropped_chunks=%lu",
-        service->device_id,
-        SERVER_HEALTH_FIRMWARE_VERSION,
-        status_message,
-        (unsigned long long)(time_us_64() / 1000ull),
-        wifi_connected ? "true" : "false",
-        service->microphone_active ? "true" : "false",
-        ina219_online ? "true" : "false",
-        bus_voltage_v,
-        shunt_voltage_mv,
-        current_ma,
-        power_mw,
-        computed_power_mw,
-        (unsigned int)audio_queue_depth,
-        (unsigned long)audio_dropped_chunks);
+    int written;
+    if (has_reading)
+    {
+        written = snprintf(
+            uri,
+            sizeof(uri),
+            "/api/devices/%s/health/report?firmware_version=%s&status_message=%s&uptime_ms=%llu&wifi_connected=%s&microphone_active=%s&ina219_online=true&bus_voltage_v=%.3f&shunt_voltage_mv=%.3f&current_ma=%.3f&power_mw=%.3f&computed_power_mw=%.3f&audio_queue_depth=%u&audio_dropped_chunks=%lu",
+            service->device_id,
+            SERVER_HEALTH_FIRMWARE_VERSION,
+            status_message,
+            (unsigned long long)(time_us_64() / 1000ull),
+            wifi_connected ? "true" : "false",
+            service->microphone_active ? "true" : "false",
+            reading.bus_voltage_v,
+            reading.shunt_voltage_mv,
+            reading.current_ma,
+            reading.power_mw,
+            reading.computed_power_mw,
+            (unsigned int)audio_queue_depth,
+            (unsigned long)audio_dropped_chunks);
+    }
+    else
+    {
+        // Send "unknown" for all power fields so the backend stores NULL
+        // instead of 0.0, allowing the frontend to display "Power: Unknown".
+        written = snprintf(
+            uri,
+            sizeof(uri),
+            "/api/devices/%s/health/report?firmware_version=%s&status_message=%s&uptime_ms=%llu&wifi_connected=%s&microphone_active=%s&ina219_online=%s&bus_voltage_v=unknown&shunt_voltage_mv=unknown&current_ma=unknown&power_mw=unknown&computed_power_mw=unknown&audio_queue_depth=%u&audio_dropped_chunks=%lu",
+            service->device_id,
+            SERVER_HEALTH_FIRMWARE_VERSION,
+            status_message,
+            (unsigned long long)(time_us_64() / 1000ull),
+            wifi_connected ? "true" : "false",
+            service->microphone_active ? "true" : "false",
+            ina219_online ? "true" : "false",
+            (unsigned int)audio_queue_depth,
+            (unsigned long)audio_dropped_chunks);
+    }
 
     if (written <= 0 || written >= (int)sizeof(uri))
     {
@@ -165,14 +181,14 @@ void server_health_service_init(server_health_service_t *service, const device_c
     memset(service, 0, sizeof(*service));
     strncpy(service->server_ip, config->server_ip, sizeof(service->server_ip) - 1u);
     strncpy(service->device_id, config->device_id, sizeof(service->device_id) - 1u);
-    service->server_addr_valid = ipaddr_aton(service->server_ip, &service->server_addr);
+    service->server_addr_valid = service->server_ip[0] != '\0';
     service->next_report_at = get_absolute_time();
     service->connection_status = SERVER_HEALTH_STATUS_PENDING;
 
     if (!service->server_addr_valid)
     {
         service->connection_status = SERVER_HEALTH_STATUS_ERROR;
-        printf("Invalid server IP for health service: %s\n", service->server_ip);
+        printf("Invalid server host for health service: %s\n", service->server_ip);
     }
 }
 

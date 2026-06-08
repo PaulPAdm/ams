@@ -5,6 +5,7 @@
 
 #include "device_status.h"
 #include "device_config.h"
+#include "audio_calibration.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -16,6 +17,7 @@ void inky_status_display_update(const device_config_t *config,
                                 const device_status_snapshot_t *status,
                                 int raw_audio_sample_rate_hz,
                                 int audio_downsample_factor);
+void inky_status_display_show_audio_calibration(const audio_calibration_t *calibration);
 
 #ifdef __cplusplus
 }

@@ -10,7 +10,8 @@
 typedef enum
 {
     STARTUP_RUN_MODE_NORMAL = 0,
-    STARTUP_RUN_MODE_DIAGNOSTICS
+    STARTUP_RUN_MODE_DIAGNOSTICS,
+    STARTUP_RUN_MODE_AUDIO_CALIBRATION
 } startup_run_mode_t;
 
 bool save_config_or_log(const device_config_t *config, const char *error_message);

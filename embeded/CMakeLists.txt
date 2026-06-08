@@ -94,11 +94,16 @@ target_include_directories(uc8151 INTERFACE ${pimoroni_pico_SOURCE_DIR})
 
 add_executable(embeded
                 src/acoustic_runtime.c
+                src/audio_calibration.c
+                src/audio_calibration_runtime.c
+                src/audio_spectrum.c
+                src/console_helpers.c
                 src/device_config.c
                 src/device_clock.c
                 src/device_status.c
                 src/diagnostics_service.c
                 src/health_runtime.c
+                src/http_post_client.c
                 src/network_runtime.c
                 src/runtime_status.c
                 src/wifi_service.c
@@ -111,6 +116,7 @@ add_executable(embeded
                 src/microphone.c
                 src/sd_card_buffer.c
                 src/sound_event_detector.c
+                src/sound_event_uploader.c
                 src/inky_status_display.cpp
                 src/power_meter_service.c
                 src/server_health.c

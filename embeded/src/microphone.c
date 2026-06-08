@@ -3,7 +3,9 @@
 #include "pico/stdlib.h"
 #include "hardware/clocks.h"
 #include "hardware/dma.h"
+#include "hardware/vreg.h"
 #include "i2s.h"
+#include "device_runtime_config.h"
 
 static const uint SEL_PIN = 3;
 static const uint SEL_LEVEL = 1;
@@ -40,8 +42,8 @@ void microphone_set_buffer_callback(microphone_buffer_callback_t callback)
 
 void microphone_init(void)
 {
-    // 132 MHz gives clean dividers for common I2S rates such as 48 kHz.
-    set_sys_clock_khz(132000, true);
+    vreg_set_voltage(VREG_VOLTAGE_1_05);
+    set_sys_clock_khz(DEVICE_SYS_CLOCK_KHZ, true);
 
     // Keep SEL high; diagnostics show this appears as capture slot 0 in this I2S pipeline.
     gpio_init(SEL_PIN);

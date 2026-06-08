@@ -21,6 +21,7 @@ typedef struct
 {
     uint16_t slot;
     size_t sample_count;
+    uint64_t captured_at_us;
     const int16_t *samples;
 } audio_chunk_view_t;
 

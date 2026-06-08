@@ -170,6 +170,41 @@ void render_missing_settings_screen(display_context_t *context, bool usb_console
     context->display.update(&graphics);
 }
 
+void render_audio_calibration_screen(display_context_t *context, const audio_calibration_t *calibration)
+{
+    PicoGraphics_Pen1BitY &graphics = context->graphics;
+    char line_buffer[40];
+
+    graphics.set_pen(15);
+    graphics.clear();
+    graphics.set_pen(0);
+
+    draw_line(graphics, 0, "Audio calibration");
+    if (!audio_calibration_is_valid(calibration))
+    {
+        draw_line(graphics, 2, "No valid bands");
+        draw_line(graphics, 3, "Use USB console");
+        context->display.update(&graphics);
+        return;
+    }
+
+    std::snprintf(line_buffer, sizeof(line_buffer), "Bands: %u", (unsigned int)calibration->band_count);
+    draw_line(graphics, 1, line_buffer);
+    for (size_t i = 0; i < calibration->band_count && i < 5u; ++i)
+    {
+        const audio_calibration_band_t &band = calibration->bands[i];
+        std::snprintf(line_buffer,
+                      sizeof(line_buffer),
+                      "%uHz x%u.%02u",
+                      (unsigned int)band.center_hz,
+                      (unsigned int)(band.threshold_multiplier_x100 / 100u),
+                      (unsigned int)(band.threshold_multiplier_x100 % 100u));
+        draw_line(graphics, (int)i + 2, line_buffer);
+    }
+
+    context->display.update(&graphics);
+}
+
 } // namespace
 
 extern "C" void inky_status_display_reset(void)
@@ -222,4 +257,12 @@ extern "C" void inky_status_display_update(const device_config_t *config,
     context->last_config = *config;
     context->last_refresh_at = now;
     context->has_rendered = true;
+}
+
+extern "C" void inky_status_display_show_audio_calibration(const audio_calibration_t *calibration)
+{
+    display_context_t *context = get_display_context();
+    render_audio_calibration_screen(context, calibration);
+    context->last_refresh_at = get_absolute_time();
+    context->has_rendered = false;
 }

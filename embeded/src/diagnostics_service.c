@@ -42,9 +42,10 @@ void diagnostics_service_poll(diagnostics_service_t *service,
         return;
     }
 
-    printf("[Diagnostics] Microphone=%s | INA219=%s | Wi-Fi=%s | Server=%s\n",
+    printf("[Diagnostics] Microphone=%s | INA219=%s | SD=%s | Wi-Fi=%s | Server=%s\n",
            device_component_state_label(snapshot->microphone),
            device_component_state_label(snapshot->ina219),
+           device_component_state_label(snapshot->sd_card),
            device_wifi_state_label(snapshot->wifi),
            device_server_state_label(snapshot->server));
 
