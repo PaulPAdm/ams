@@ -13,6 +13,7 @@ const readDeviceFromQuery = () => {
 
 export function useDeviceHealth() {
   const [devices, setDevices] = useState([]);
+  const [devicesError, setDevicesError] = useState(null);
   const [selectedDeviceId, setSelectedDeviceId] = useState(readDeviceFromQuery);
   const [reports, setReports] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -28,6 +29,7 @@ export function useDeviceHealth() {
         }
 
         setDevices(nextDevices);
+        setDevicesError(null);
         setSelectedDeviceId((current) => {
           if (current && nextDevices.some((device) => device.id === current)) {
             return current;
@@ -36,9 +38,10 @@ export function useDeviceHealth() {
           return nextDevices[0]?.id ?? null;
         });
       })
-      .catch(() => {
+      .catch((nextError) => {
         if (active) {
           setDevices([]);
+          setDevicesError(nextError);
         }
       });
 
@@ -116,6 +119,7 @@ export function useDeviceHealth() {
 
   return {
     devices,
+    devicesError,
     error,
     isLoading,
     refresh,

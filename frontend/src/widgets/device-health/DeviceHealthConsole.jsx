@@ -12,6 +12,7 @@ const formatCount = (value) => (Number.isFinite(value) ? String(value) : '—');
 export function DeviceHealthConsole({ onOpenAdmin }) {
   const {
     devices,
+    devicesError,
     error,
     isLoading,
     refresh,
@@ -23,6 +24,12 @@ export function DeviceHealthConsole({ onOpenAdmin }) {
 
   const latest = summary.latest;
   const hasData = reports.length > 0;
+  const hasDevices = devices.length > 0;
+  const chartOverlay = isLoading
+    ? 'Loading…'
+    : !hasDevices
+      ? 'No devices available'
+      : 'No health reports for this device yet';
 
   return (
     <div className="admin-console">
@@ -52,8 +59,9 @@ export function DeviceHealthConsole({ onOpenAdmin }) {
               <select
                 value={selectedDeviceId || ''}
                 onChange={(event) => selectDevice(event.target.value)}
+                disabled={!hasDevices}
               >
-                {!devices.length ? <option value="">No devices</option> : null}
+                {!hasDevices ? <option value="">No devices</option> : null}
                 {devices.map((device) => (
                   <option key={device.id} value={device.id}>
                     {device.name} ({device.id})
@@ -77,6 +85,12 @@ export function DeviceHealthConsole({ onOpenAdmin }) {
           </div>
         </Panel>
 
+        {devicesError ? (
+          <div className="admin-error-banner">
+            <span>Could not load devices — is the backend running? ({devicesError.message || 'request failed'})</span>
+          </div>
+        ) : null}
+
         {error ? (
           <div className="admin-error-banner">
             <span>{error.message || 'Failed to load device health.'}</span>
@@ -88,11 +102,8 @@ export function DeviceHealthConsole({ onOpenAdmin }) {
             <span>Power</span>
           </div>
           <div className="chart-panel__canvas">
-            {hasData ? (
-              <PowerChart reports={reports} />
-            ) : (
-              <p className="panel-empty">{isLoading ? 'Loading…' : 'No health reports for this device yet.'}</p>
-            )}
+            <PowerChart reports={reports} />
+            {!hasData ? <div className="chart-panel__overlay">{chartOverlay}</div> : null}
           </div>
         </Panel>
 
@@ -101,11 +112,8 @@ export function DeviceHealthConsole({ onOpenAdmin }) {
             <span>Audio pipeline</span>
           </div>
           <div className="chart-panel__canvas">
-            {hasData ? (
-              <AudioPipelineChart reports={reports} />
-            ) : (
-              <p className="panel-empty">{isLoading ? 'Loading…' : 'No health reports for this device yet.'}</p>
-            )}
+            <AudioPipelineChart reports={reports} />
+            {!hasData ? <div className="chart-panel__overlay">{chartOverlay}</div> : null}
           </div>
         </Panel>
       </div>
