@@ -3,6 +3,8 @@
 #include "audio_stream_queue.h"
 #include "inky_status_display.h"
 
+static device_component_state_t g_sd_card_state = DEVICE_COMPONENT_PENDING;
+
 static device_server_state_t map_server_status(const server_health_service_t *server_health_service,
                                                device_wifi_state_t wifi_state)
 {
@@ -46,7 +48,7 @@ static void refresh_runtime_status(device_status_snapshot_t *status,
 
     status->microphone = microphone_ready ? DEVICE_COMPONENT_OK : DEVICE_COMPONENT_PENDING;
     status->ina219 = power_meter_service_is_sensor_online(power_meter_service) ? DEVICE_COMPONENT_OK : DEVICE_COMPONENT_ERROR;
-    status->sd_card = DEVICE_COMPONENT_PENDING;
+    status->sd_card = g_sd_card_state;
     status->wifi = wifi_state;
     status->server = map_server_status(server_health_service, wifi_state);
 
@@ -57,6 +59,11 @@ static void refresh_runtime_status(device_status_snapshot_t *status,
         status->bus_voltage_v = power_reading.bus_voltage_v;
         status->current_ma = power_reading.current_ma;
     }
+}
+
+void runtime_status_set_sd_card_state(device_component_state_t sd_card_state)
+{
+    g_sd_card_state = sd_card_state;
 }
 
 void runtime_status_publish(const device_config_t *config,

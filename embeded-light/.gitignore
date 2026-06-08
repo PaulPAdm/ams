@@ -1,0 +1,17 @@
+# IDE
+.vscode/
+
+# CMake build directories
+build/
+cmake-build-*/
+CMakeCache.txt
+CMakeFiles/
+compile_commands.json
+cmake_install.cmake
+
+# Firmware and linker artifacts
+*.elf
+*.bin
+*.hex
+*.uf2
+*.map

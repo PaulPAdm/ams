@@ -3,6 +3,7 @@
 #include <string.h>
 #include "pico/stdlib.h"
 #include "pico/stdio_usb.h"
+#include "console_helpers.h"
 #include "device_config.h"
 #include "device_runtime_config.h"
 #include "startup_helpers.h"
@@ -13,70 +14,9 @@ typedef enum
 {
     START_MENU_START_NORMAL = 1,
     START_MENU_EDIT_SETTINGS = 2,
-    START_MENU_START_DIAGNOSTICS = 3
+    START_MENU_START_DIAGNOSTICS = 3,
+    START_MENU_START_AUDIO_CALIBRATION = 4
 } start_menu_action_t;
-
-static bool read_line(char *out, size_t out_size)
-{
-    if (out == NULL || out_size == 0)
-    {
-        return false;
-    }
-
-    size_t idx = 0;
-
-    while (true)
-    {
-        int ch = getchar();
-        if (ch < 0)
-        {
-            continue;
-        }
-
-        if (ch == '\r' || ch == '\n')
-        {
-            out[idx] = '\0';
-            printf("\n");
-            fflush(stdout);
-            return true;
-        }
-
-        if (ch == 0x08 || ch == 0x7F)
-        {
-            if (idx > 0)
-            {
-                idx--;
-                printf("\b \b");
-                fflush(stdout);
-            }
-            continue;
-        }
-
-        if (ch >= 32 && ch < 127 && idx + 1 < out_size)
-        {
-            out[idx++] = (char)ch;
-            putchar((char)ch);
-            fflush(stdout);
-        }
-    }
-}
-
-static bool prompt_required_field(const char *label, char *out, size_t out_size)
-{
-    while (true)
-    {
-        printf("%s: ", label);
-        if (!read_line(out, out_size))
-        {
-            return false;
-        }
-        if (out[0] != '\0')
-        {
-            return true;
-        }
-        printf("Value cannot be empty.\n");
-    }
-}
 
 static start_menu_action_t prompt_start_action(void)
 {
@@ -87,9 +27,10 @@ static start_menu_action_t prompt_start_action(void)
         printf("1 - Start Normal Mode\n");
         printf("2 - Edit Settings\n");
         printf("3 - Start Diagnostics Mode\n");
-        printf("Select [1/2/3]: ");
+        printf("4 - Start Audio Calibration\n");
+        printf("Select [1/2/3/4]: ");
 
-        if (!read_line(answer, sizeof(answer)))
+        if (!console_read_line(answer, sizeof(answer)))
         {
             continue;
         }
@@ -105,6 +46,10 @@ static start_menu_action_t prompt_start_action(void)
         if (answer[0] == '3' && answer[1] == '\0')
         {
             return START_MENU_START_DIAGNOSTICS;
+        }
+        if (answer[0] == '4' && answer[1] == '\0')
+        {
+            return START_MENU_START_AUDIO_CALIBRATION;
         }
 
         printf("Invalid choice.\n");
@@ -128,19 +73,19 @@ static bool prompt_full_config(device_config_t *config, const device_config_t *b
     }
 
     printf("Enter device settings:\n");
-    if (!prompt_required_field("Wi-Fi SSID", config->ssid, sizeof(config->ssid)))
+    if (!console_prompt_required_field("Wi-Fi SSID", config->ssid, sizeof(config->ssid)))
     {
         return false;
     }
-    if (!prompt_required_field("Wi-Fi password", config->password, sizeof(config->password)))
+    if (!console_prompt_required_field("Wi-Fi password", config->password, sizeof(config->password)))
     {
         return false;
     }
-    if (!prompt_required_field("Server IP", config->server_ip, sizeof(config->server_ip)))
+    if (!console_prompt_required_field("Server host or IP", config->server_ip, sizeof(config->server_ip)))
     {
         return false;
     }
-    if (!prompt_required_field("Device ID", config->device_id, sizeof(config->device_id)))
+    if (!console_prompt_required_field("Device ID", config->device_id, sizeof(config->device_id)))
     {
         return false;
     }
@@ -167,7 +112,7 @@ static void print_saved_identity(const device_config_t *config)
         return;
     }
     printf("SSID: %s\n", config->ssid);
-    printf("Server IP: %s\n", config->server_ip);
+    printf("Server host/IP: %s\n", config->server_ip);
     printf("Device ID: %s\n", config->device_id);
 }
 
@@ -233,8 +178,16 @@ void print_current_settings(const device_config_t *config,
     printf("\n===== Current settings =====\n");
     print_setting_str("Wi-Fi SSID", config->ssid);
     print_setting_str("Wi-Fi password", config->password);
-    print_setting_str("Server IP", config->server_ip);
+    print_setting_str("Server host/IP", config->server_ip);
     print_setting_str("Device ID", config->device_id);
+    if (audio_calibration_is_valid(&config->audio_calibration))
+    {
+        print_setting_int("Audio calibrated bands", config->audio_calibration.band_count);
+    }
+    else
+    {
+        print_setting_str("Audio calibration", "not calibrated");
+    }
     printf("=============================\n\n");
 }
 
@@ -259,6 +212,8 @@ const char *startup_run_mode_label(startup_run_mode_t mode)
 {
     switch (mode)
     {
+    case STARTUP_RUN_MODE_AUDIO_CALIBRATION:
+        return "Audio Calibration Mode";
     case STARTUP_RUN_MODE_DIAGNOSTICS:
         return "Diagnostics Mode";
     case STARTUP_RUN_MODE_NORMAL:
@@ -317,6 +272,10 @@ startup_run_mode_t resolve_startup_config(device_config_t *config, bool has_conf
         if (action == START_MENU_START_DIAGNOSTICS)
         {
             return STARTUP_RUN_MODE_DIAGNOSTICS;
+        }
+        if (action == START_MENU_START_AUDIO_CALIBRATION)
+        {
+            return STARTUP_RUN_MODE_AUDIO_CALIBRATION;
         }
 
         return STARTUP_RUN_MODE_NORMAL;

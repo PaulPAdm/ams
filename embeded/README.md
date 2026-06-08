@@ -88,13 +88,18 @@ Stałe czasu są w `include/device_runtime_config.h`:
 - synchronizacja czasu: kilka prób, okresowo co kilka minut,
 - health report: cykliczny raport stanu,
 - post-capture audio: krótkie okno po wykryciu zdarzenia.
+- audio calibration: tryb USB wybiera 6 dominujących pasm częstotliwości i zapisuje progi detekcji.
 
 Konfiguracja urządzenia musi zawierać między innymi:
 
 - identyfikator urządzenia,
 - dane sieci Wi-Fi,
-- adres serwera backend/VPS,
-- progi detekcji audio.
+- host lub adres IP serwera backend/VPS,
+- kalibrację pasm audio dla detekcji impulsów.
+
+## Kalibracja audio
+
+Po podłączeniu USB menu startowe ma tryb `Start Audio Calibration`. Firmware słucha mikrofonu przez podany czas, liczy widmo przez CMSIS-DSP FFT i wybiera 6 dominujących pasm. Dla każdego pasma zapisywana jest energia bazowa oraz mnożnik progu, domyślnie `2.00x`. Po kalibracji można wydrukować tabelę, zmienić mnożnik dla każdego pasma i zapisać ustawienia do flash.
 
 ## Komunikacja z backendem
 
