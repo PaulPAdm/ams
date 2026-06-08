@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "hardware/watchdog.h"
+
 bool console_read_line(char *out, size_t out_size)
 {
     if (out == NULL || out_size == 0u)
@@ -14,6 +16,7 @@ bool console_read_line(char *out, size_t out_size)
 
     while (true)
     {
+        watchdog_update();
         int ch = getchar();
         if (ch < 0)
         {

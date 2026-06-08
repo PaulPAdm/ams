@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "hardware/watchdog.h"
 #include "pico/stdlib.h"
 #include "pico/stdio_usb.h"
 #include "console_helpers.h"
@@ -99,6 +100,7 @@ static void halt_forever_with_message(const char *message)
     {
         printf("%s\n", message);
     }
+    watchdog_disable();
     while (true)
     {
         sleep_ms(1000);
@@ -196,6 +198,7 @@ bool startup_wait_for_usb_console(power_meter_service_t *power_meter_service)
     absolute_time_t deadline = make_timeout_time_ms(USB_CONSOLE_DETECT_WINDOW_MS);
     while (!time_reached(deadline))
     {
+        watchdog_update();
         if (stdio_usb_connected())
         {
             return true;
