@@ -10,6 +10,11 @@
 #define DEVICE_CONFIG_PASSWORD_MAX 64
 #define DEVICE_CONFIG_SERVER_IP_MAX 63
 #define DEVICE_CONFIG_ID_MAX 63
+#define DEVICE_CONFIG_HEALTH_INTERVAL_MIN_DEFAULT 15u
+#define DEVICE_CONFIG_TIME_SYNC_INTERVAL_MIN_DEFAULT 60u
+#define DEVICE_CONFIG_INTERVAL_MIN_MIN 1u
+#define DEVICE_CONFIG_INTERVAL_MIN_MAX 1440u
+
 typedef struct
 {
     char ssid[DEVICE_CONFIG_SSID_MAX + 1];
@@ -17,6 +22,10 @@ typedef struct
     char server_ip[DEVICE_CONFIG_SERVER_IP_MAX + 1];
     char device_id[DEVICE_CONFIG_ID_MAX + 1];
     audio_calibration_t audio_calibration;
+    /* How often the device logs a health sample and flushes buffered reports. */
+    uint32_t health_report_interval_min;
+    /* How often the device re-synchronizes its clock with the server. */
+    uint32_t time_sync_interval_min;
 } device_config_t;
 
 bool device_config_load(device_config_t *config);

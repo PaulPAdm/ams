@@ -7,7 +7,7 @@
 #include "device_config.h"
 
 #define DEVICE_CONFIG_MAGIC 0x43464731u
-#define DEVICE_CONFIG_VERSION 4u
+#define DEVICE_CONFIG_VERSION 5u
 #define DEVICE_CONFIG_FLASH_OFFSET (PICO_FLASH_SIZE_BYTES - FLASH_SECTOR_SIZE)
 #define DEVICE_CONFIG_STORAGE_BYTES (((sizeof(device_config_record_t) + FLASH_PAGE_SIZE - 1u) / FLASH_PAGE_SIZE) * FLASH_PAGE_SIZE)
 
@@ -34,6 +34,24 @@ typedef struct
     uint32_t crc32;
     device_config_legacy_v3_t config;
 } device_config_record_legacy_v3_t;
+
+/* v4 layout: same as v5 minus the configurable interval fields. */
+typedef struct
+{
+    char ssid[DEVICE_CONFIG_SSID_MAX + 1];
+    char password[DEVICE_CONFIG_PASSWORD_MAX + 1];
+    char server_ip[DEVICE_CONFIG_SERVER_IP_MAX + 1];
+    char device_id[DEVICE_CONFIG_ID_MAX + 1];
+    audio_calibration_t audio_calibration;
+} device_config_legacy_v4_t;
+
+typedef struct
+{
+    uint32_t magic;
+    uint32_t version;
+    uint32_t crc32;
+    device_config_legacy_v4_t config;
+} device_config_record_legacy_v4_t;
 
 _Static_assert(sizeof(device_config_record_t) <= FLASH_SECTOR_SIZE, "Device config must fit in one flash sector");
 
@@ -78,6 +96,26 @@ static void normalize_audio_calibration(device_config_t *config)
     }
 }
 
+static void normalize_intervals(device_config_t *config)
+{
+    if (config == NULL)
+    {
+        return;
+    }
+
+    if (config->health_report_interval_min < DEVICE_CONFIG_INTERVAL_MIN_MIN ||
+        config->health_report_interval_min > DEVICE_CONFIG_INTERVAL_MIN_MAX)
+    {
+        config->health_report_interval_min = DEVICE_CONFIG_HEALTH_INTERVAL_MIN_DEFAULT;
+    }
+
+    if (config->time_sync_interval_min < DEVICE_CONFIG_INTERVAL_MIN_MIN ||
+        config->time_sync_interval_min > DEVICE_CONFIG_INTERVAL_MIN_MAX)
+    {
+        config->time_sync_interval_min = DEVICE_CONFIG_TIME_SYNC_INTERVAL_MIN_DEFAULT;
+    }
+}
+
 static bool config_has_required_fields(const device_config_t *config)
 {
     return config->ssid[0] != '\0' &&
@@ -106,6 +144,7 @@ static bool load_config_payload(device_config_t *config,
 
     terminate_config_strings(config);
     normalize_audio_calibration(config);
+    normalize_intervals(config);
     return config_has_required_fields(config);
 }
 
@@ -128,6 +167,31 @@ static bool load_legacy_config_payload(device_config_t *config,
     memcpy(config->device_id, payload->device_id, sizeof(config->device_id));
     terminate_config_strings(config);
     audio_calibration_set_defaults(&config->audio_calibration);
+    normalize_intervals(config);
+    return config_has_required_fields(config);
+}
+
+static bool load_legacy_v4_config_payload(device_config_t *config,
+                                          const device_config_legacy_v4_t *payload,
+                                          size_t payload_size,
+                                          uint32_t expected_crc)
+{
+    if (config == NULL || payload == NULL ||
+        payload_size != sizeof(*payload) ||
+        crc32_compute((const uint8_t *)payload, payload_size) != expected_crc)
+    {
+        return false;
+    }
+
+    memset(config, 0, sizeof(*config));
+    memcpy(config->ssid, payload->ssid, sizeof(config->ssid));
+    memcpy(config->password, payload->password, sizeof(config->password));
+    memcpy(config->server_ip, payload->server_ip, sizeof(config->server_ip));
+    memcpy(config->device_id, payload->device_id, sizeof(config->device_id));
+    config->audio_calibration = payload->audio_calibration;
+    terminate_config_strings(config);
+    normalize_audio_calibration(config);
+    normalize_intervals(config); /* v4 had no intervals; apply defaults. */
     return config_has_required_fields(config);
 }
 
@@ -142,6 +206,7 @@ static bool sanitize_config_for_storage(const device_config_t *config, device_co
     memcpy(sanitized_config, config, sizeof(*sanitized_config));
     terminate_config_strings(sanitized_config);
     normalize_audio_calibration(sanitized_config);
+    normalize_intervals(sanitized_config);
     return config_has_required_fields(sanitized_config);
 }
 
@@ -165,6 +230,15 @@ bool device_config_load(device_config_t *config)
                                           &legacy_record->config,
                                           sizeof(legacy_record->config),
                                           legacy_record->crc32);
+    }
+
+    if (record->version == 4u)
+    {
+        const device_config_record_legacy_v4_t *legacy_record = (const device_config_record_legacy_v4_t *)record;
+        return load_legacy_v4_config_payload(config,
+                                             &legacy_record->config,
+                                             sizeof(legacy_record->config),
+                                             legacy_record->crc32);
     }
 
     if (record->version != DEVICE_CONFIG_VERSION)

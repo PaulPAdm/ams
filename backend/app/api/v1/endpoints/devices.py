@@ -83,10 +83,17 @@ def _create_device_health_report(
 ) -> models.DeviceHealthReport:
     _require_device(db, device_id)
 
+    data = report_in.model_dump()
+    # captured_at_ns is not a column; when present it overrides the receive-time
+    # timeline so batched offline reports land at their original capture time.
+    captured_at_ns = data.pop("captured_at_ns", None)
+
     db_obj = models.DeviceHealthReport(
         device_id=device_id,
-        **report_in.model_dump()
+        **data
     )
+    if captured_at_ns:
+        db_obj.received_at_ns = captured_at_ns
     db.add(db_obj)
     db.commit()
     db.refresh(db_obj)
