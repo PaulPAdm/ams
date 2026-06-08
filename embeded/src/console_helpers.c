@@ -4,6 +4,9 @@
 #include <stdlib.h>
 
 #include "hardware/watchdog.h"
+#include "pico/stdlib.h"
+
+#define CONSOLE_GETCHAR_TIMEOUT_US 50000
 
 bool console_read_line(char *out, size_t out_size)
 {
@@ -16,8 +19,11 @@ bool console_read_line(char *out, size_t out_size)
 
     while (true)
     {
+        // getchar() blocks indefinitely, which would starve the watchdog while
+        // the user is thinking. Use a short timeout so the loop keeps spinning
+        // and feeding the watchdog between keystrokes.
         watchdog_update();
-        int ch = getchar();
+        int ch = getchar_timeout_us(CONSOLE_GETCHAR_TIMEOUT_US);
         if (ch < 0)
         {
             continue;

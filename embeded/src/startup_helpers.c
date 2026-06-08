@@ -11,6 +11,11 @@
 
 #define USB_CONSOLE_DETECT_WINDOW_MS 7000u
 
+// After the CDC link comes up the host terminal needs a moment before it
+// starts reading. Without this settle delay the first lines of the setup menu
+// are emitted into a pipe the terminal has not attached to yet and are lost.
+#define USB_CONSOLE_SETTLE_MS 600u
+
 typedef enum
 {
     START_MENU_START_NORMAL = 1,
@@ -201,6 +206,14 @@ bool startup_wait_for_usb_console(power_meter_service_t *power_meter_service)
         watchdog_update();
         if (stdio_usb_connected())
         {
+            // Let the host terminal finish attaching before the caller prints
+            // the first setup messages, otherwise they get dropped.
+            absolute_time_t settle = make_timeout_time_ms(USB_CONSOLE_SETTLE_MS);
+            while (!time_reached(settle))
+            {
+                watchdog_update();
+                sleep_ms(DEVICE_RUNTIME_POLL_SLEEP_MS);
+            }
             return true;
         }
 
