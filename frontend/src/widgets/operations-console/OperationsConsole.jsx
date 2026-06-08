@@ -1,6 +1,7 @@
 import { Settings } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { appConfig } from '@/app/config/env';
+import { AppBrand } from '@/shared/ui/AppBrand';
 import { useIncidentFeed } from '@/entities/incident/model/useIncidentFeed';
 import { useIncidentNotifications } from '@/entities/incident/model/useIncidentNotifications';
 import { useSensors } from '@/entities/sensor/model/useSensors';
@@ -188,6 +189,10 @@ export function OperationsConsole({ onOpenAdmin }) {
           sensors={sensors}
           viewState={viewState}
         />
+      </div>
+
+      <div className="operations-brand">
+        <AppBrand size="sm" />
       </div>
 
       <button

@@ -1,4 +1,4 @@
-import { Activity, AudioLines, Cpu, Edit, Trash2 } from 'lucide-react';
+import { Activity, AudioLines, Cpu, Edit, HeartPulse, Trash2 } from 'lucide-react';
 import { Panel } from '@/shared/ui/Panel';
 import { Badge } from '@/shared/ui/Badge';
 import { cx } from '@/shared/lib/cx';
@@ -55,6 +55,7 @@ export function DeviceRegistryPanel({
   onDelete,
   onEdit,
   onOpenAudio,
+  onOpenHealth,
   onOpenPeaks,
 }) {
   return (
@@ -107,6 +108,9 @@ export function DeviceRegistryPanel({
                     </button>
                     <button type="button" className="icon-button" title="Open peaks" onClick={() => onOpenPeaks(device.id)}>
                       <Activity size={16} />
+                    </button>
+                    <button type="button" className="icon-button" title="Open device health" onClick={() => onOpenHealth(device.id)}>
+                      <HeartPulse size={16} />
                     </button>
                     <button type="button" className="icon-button" title="Edit device" onClick={() => onEdit(device)}>
                       <Edit size={16} />

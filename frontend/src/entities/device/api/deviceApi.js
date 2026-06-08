@@ -1,6 +1,6 @@
 import { appConfig } from '@/app/config/env';
 import { deleteJson, getJson, postJson, putJson } from '@/shared/api/http';
-import { mapDevice, serializeDevicePayload } from '@/entities/device/model/device';
+import { mapDevice, mapDeviceHealth, serializeDevicePayload } from '@/entities/device/model/device';
 
 export async function listDevices(options = {}) {
   const response = await getJson('/api/devices/', {
@@ -34,4 +34,15 @@ export async function updateDevice(deviceId, input) {
 
 export function deleteDevice(deviceId) {
   return deleteJson(`/api/devices/${deviceId}`);
+}
+
+export async function listDeviceHealthReports(deviceId, { limit = 200, signal } = {}) {
+  const response = await getJson(`/api/devices/${deviceId}/health`, {
+    params: { limit, skip: 0 },
+    signal,
+  });
+
+  const reports = Array.isArray(response) ? response.map(mapDeviceHealth).filter(Boolean) : [];
+  // Backend returns newest-first; reverse to chronological order for charts.
+  return reports.reverse();
 }

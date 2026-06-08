@@ -7,8 +7,17 @@ import { DeviceRegistryPanel } from '@/widgets/admin-console/DeviceRegistryPanel
 import { IncidentAdminPanel } from '@/widgets/admin-console/IncidentAdminPanel';
 import { PeaksDrawer } from '@/widgets/admin-console/PeaksDrawer';
 
-export function AdminConsole({ onOpenOperations }) {
+export function AdminConsole({ onOpenHealth, onOpenOperations }) {
   const admin = useAdminConsole();
+
+  const reportingDevices = admin.devices.filter((device) => device.latestHealth);
+  const reportingCount = reportingDevices.length;
+  const powerReadings = reportingDevices
+    .map((device) => device.latestHealth.powerMw)
+    .filter((value) => Number.isFinite(value));
+  const avgPowerMw = powerReadings.length
+    ? powerReadings.reduce((sum, value) => sum + value, 0) / powerReadings.length
+    : null;
 
   const confirmAndRun = async (message, action) => {
     if (!window.confirm(message)) {
@@ -26,13 +35,16 @@ export function AdminConsole({ onOpenOperations }) {
     <div className="admin-console">
       <div className="admin-console__layout">
         <AdminHeader
+          avgPowerMw={avgPowerMw}
           deviceCount={admin.devices.length}
           incidentCount={admin.incidents.length}
           isRefreshing={admin.isRefreshing}
           onCreateDevice={admin.openCreateForm}
           onOpenGlobalPeaks={admin.openGlobalPeaksDrawer}
+          onOpenHealth={() => onOpenHealth()}
           onOpenOperations={onOpenOperations}
           onRefresh={() => admin.refreshDashboard()}
+          reportingCount={reportingCount}
           systemHealth={admin.systemHealth}
         />
 
@@ -42,6 +54,7 @@ export function AdminConsole({ onOpenOperations }) {
           onDelete={(deviceId) => confirmAndRun(`Delete device ${deviceId}?`, () => admin.deleteDeviceById(deviceId))}
           onEdit={admin.openEditForm}
           onOpenAudio={admin.openDeviceAudioDrawer}
+          onOpenHealth={onOpenHealth}
           onOpenPeaks={admin.openDevicePeaksDrawer}
         />
 
