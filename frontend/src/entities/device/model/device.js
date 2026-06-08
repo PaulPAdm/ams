@@ -1,3 +1,5 @@
+import { toBoolOrNull } from '@/shared/lib/format';
+
 const toCoordinate = (value) => {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : null;
@@ -34,7 +36,7 @@ export function mapDeviceHealth(rawHealth) {
     uptimeMs: toNumberOrNull(rawHealth.uptime_ms),
     wifiConnected: rawHealth.wifi_connected,
     microphoneActive: rawHealth.microphone_active,
-    ina219Online: rawHealth.ina219_online,
+    ina219Online: toBoolOrNull(rawHealth.ina219_online),
     busVoltageV: toNumberOrNull(rawHealth.bus_voltage_v),
     shuntVoltageMv: toNumberOrNull(rawHealth.shunt_voltage_mv),
     currentMa: toNumberOrNull(rawHealth.current_ma),

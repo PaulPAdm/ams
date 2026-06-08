@@ -78,11 +78,11 @@ export function AdminConsole({ onOpenOperations }) {
       <AudioRecordsDrawer
         state={admin.audioState}
         onClear={() => confirmAndRun(
-          `Delete all audio records for device ${admin.audioState.deviceId}?`,
+          `Delete all acoustic events for device ${admin.audioState.deviceId}?`,
           () => admin.clearAudioRecordsForDevice(admin.audioState.deviceId),
         )}
         onClose={admin.closeAudioDrawer}
-        onDelete={(recordId) => confirmAndRun(`Delete audio record #${recordId}?`, () => admin.removeAudioRecordById(recordId))}
+        onDelete={(recordId) => confirmAndRun(`Delete acoustic event #${recordId}?`, () => admin.removeAudioRecordById(recordId))}
         onRefresh={admin.refreshAudioDrawer}
       />
     </div>

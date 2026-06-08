@@ -236,7 +236,11 @@ export function useAdminConsole() {
   };
 
   const removeAudioRecordById = async (recordId) => {
-    await deleteAudioRecord(recordId);
+    if (!audioState.deviceId) {
+      return;
+    }
+
+    await deleteAudioRecord(audioState.deviceId, recordId);
     setAudioState((currentState) => ({
       ...currentState,
       items: currentState.items.filter((record) => record.id !== recordId),

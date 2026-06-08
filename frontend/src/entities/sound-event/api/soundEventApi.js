@@ -1,4 +1,4 @@
-import { buildApiUrl, getJson } from '@/shared/api/http';
+import { buildApiUrl, getJson, postFormData } from '@/shared/api/http';
 import { mapSoundEvent } from '@/entities/sound-event/model/soundEvent';
 
 export async function listDeviceSoundEvents(deviceId, options = {}) {
@@ -15,4 +15,15 @@ export async function listDeviceSoundEvents(deviceId, options = {}) {
 
 export function getSoundEventAudioUrl(event) {
   return event.audioDownloadUrl ? buildApiUrl(event.audioDownloadUrl) : null;
+}
+
+export async function uploadSoundEventAudioFile(deviceId, eventId, file, options = {}) {
+  const body = new FormData();
+  body.append('file', file);
+
+  const response = await postFormData(`/api/devices/${deviceId}/sound-events/${eventId}/audio`, body, {
+    signal: options.signal,
+  });
+
+  return mapSoundEvent(response);
 }

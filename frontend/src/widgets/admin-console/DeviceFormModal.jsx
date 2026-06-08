@@ -1,17 +1,20 @@
 import { LoaderCircle, Plus, Settings2, X } from 'lucide-react';
+import { useState } from 'react';
 import { formatCoordinateInput, parseCoordinates } from '@/entities/device/model/device';
 
 export function DeviceFormModal({ device, isSaving, onClose, onSubmit }) {
   const isEditing = Boolean(device);
+  const [error, setError] = useState(null);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    setError(null);
 
     const formData = new FormData(event.currentTarget);
     const coordinates = parseCoordinates(formData.get('coordinates'));
 
     if (!coordinates) {
-      window.alert('Invalid coordinates. Use "52.21, 20.98".');
+      setError('Invalid coordinates. Use "52.21, 20.98".');
       return;
     }
 
@@ -23,8 +26,8 @@ export function DeviceFormModal({ device, isSaving, onClose, onSubmit }) {
         name: formData.get('name'),
         tag: formData.get('tag'),
       });
-    } catch (error) {
-      window.alert(error.message || 'Failed to save device.');
+    } catch (err) {
+      setError(err.message || 'Failed to save device.');
     }
   };
 
@@ -82,6 +85,10 @@ export function DeviceFormModal({ device, isSaving, onClose, onSubmit }) {
               placeholder="52.21, 20.98"
             />
           </label>
+
+          {error ? (
+            <p className="admin-form__error" role="alert">{error}</p>
+          ) : null}
 
           <div className="admin-form__actions">
             <button type="button" className="button-secondary" onClick={onClose}>
