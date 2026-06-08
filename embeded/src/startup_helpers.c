@@ -96,6 +96,30 @@ static bool prompt_full_config(device_config_t *config, const device_config_t *b
         return false;
     }
 
+    uint32_t health_default = config->health_report_interval_min != 0u
+                                  ? config->health_report_interval_min
+                                  : DEVICE_CONFIG_HEALTH_INTERVAL_MIN_DEFAULT;
+    if (!console_prompt_u32("Health report interval (minutes)",
+                            DEVICE_CONFIG_INTERVAL_MIN_MIN,
+                            DEVICE_CONFIG_INTERVAL_MIN_MAX,
+                            health_default,
+                            &config->health_report_interval_min))
+    {
+        return false;
+    }
+
+    uint32_t sync_default = config->time_sync_interval_min != 0u
+                                ? config->time_sync_interval_min
+                                : DEVICE_CONFIG_TIME_SYNC_INTERVAL_MIN_DEFAULT;
+    if (!console_prompt_u32("Time sync interval (minutes)",
+                            DEVICE_CONFIG_INTERVAL_MIN_MIN,
+                            DEVICE_CONFIG_INTERVAL_MIN_MAX,
+                            sync_default,
+                            &config->time_sync_interval_min))
+    {
+        return false;
+    }
+
     return true;
 }
 
@@ -187,6 +211,8 @@ void print_current_settings(const device_config_t *config,
     print_setting_str("Wi-Fi password", config->password);
     print_setting_str("Server host/IP", config->server_ip);
     print_setting_str("Device ID", config->device_id);
+    print_setting_int("Health report interval (min)", (long)config->health_report_interval_min);
+    print_setting_int("Time sync interval (min)", (long)config->time_sync_interval_min);
     if (audio_calibration_is_valid(&config->audio_calibration))
     {
         print_setting_int("Audio calibrated bands", config->audio_calibration.band_count);

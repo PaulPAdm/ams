@@ -195,7 +195,7 @@ static void schedule_after_attempt(time_sync_service_t *service, bool success)
     if (device_clock_is_synced())
     {
         service->status = TIME_SYNC_STATUS_SYNCED;
-        service->next_sync_at = make_timeout_time_ms(DEVICE_TIME_SYNC_PERIOD_MS);
+        service->next_sync_at = make_timeout_time_ms(service->sync_period_ms);
     }
     else
     {
@@ -332,6 +332,9 @@ void time_sync_service_init(time_sync_service_t *service, const device_config_t 
     service->status = service->server_addr_valid ? TIME_SYNC_STATUS_IDLE : TIME_SYNC_STATUS_ERROR;
     service->next_sync_at = get_absolute_time();
     service->best_rtt_ns = ULLONG_MAX;
+    service->sync_period_ms = config->time_sync_interval_min != 0u
+                                  ? config->time_sync_interval_min * 60000u
+                                  : DEVICE_TIME_SYNC_PERIOD_MS;
 
     if (!service->server_addr_valid)
     {

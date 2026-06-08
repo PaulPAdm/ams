@@ -42,7 +42,15 @@ class DeviceHealthReportBase(BaseModel):
 
 
 class DeviceHealthReportCreate(DeviceHealthReportBase):
-    pass
+    # Optional capture time (device UTC ns). When the device buffers reports while
+    # offline and flushes them later, this preserves the original timeline instead
+    # of using the server receive time. Stored as received_at_ns when provided.
+    captured_at_ns: Optional[int] = Field(default=None, ge=0)
+
+    @field_validator("captured_at_ns", mode="before")
+    @classmethod
+    def coerce_unknown_captured_at(cls, value: Any) -> Any:
+        return _coerce_unknown(value)
 
 
 class DeviceHealthReport(DeviceHealthReportBase):

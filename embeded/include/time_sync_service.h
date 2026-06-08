@@ -33,6 +33,7 @@ typedef struct
     size_t response_len;
     uint64_t client_sent_monotonic_ns;
     uint64_t best_rtt_ns;
+    uint32_t sync_period_ms;
     uint8_t attempts_remaining;
     time_sync_status_t status;
     bool server_addr_valid;
