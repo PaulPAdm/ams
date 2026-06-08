@@ -1,4 +1,4 @@
-from sqlalchemy import BigInteger, Boolean, Column, Float, ForeignKey, Integer, String
+from sqlalchemy import BigInteger, Boolean, Column, Float, ForeignKey, Index, Integer, String
 from sqlalchemy.orm import relationship
 
 from app.core.time_utils import epoch_ns
@@ -7,6 +7,9 @@ from app.db.base_class import Base
 
 class SoundEvent(Base):
     __tablename__ = "sound_events"
+    __table_args__ = (
+        Index("ix_sound_events_device_id_event_time_ns", "device_id", "event_time_ns"),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
     device_id = Column(String, ForeignKey("location.id", ondelete="CASCADE"), index=True, nullable=False)

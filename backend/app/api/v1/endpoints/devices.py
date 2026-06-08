@@ -295,6 +295,25 @@ def read_latest_device_health_report(
     return report
 
 
+@router.get("/{device_id}/peaks", response_model=List[schemas.Peak], summary="List device peaks")
+def list_device_peaks(
+    *,
+    db: Session = Depends(get_db),
+    device_id: str,
+    skip: int = 0,
+    limit: int = 1000,
+) -> Any:
+    _require_device(db, device_id)
+    return (
+        db.query(models.Peak)
+        .filter(models.Peak.device_id == device_id)
+        .order_by(models.Peak.peak_time_ns.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+
+
 @router.get("/{device_id}/health", response_model=List[schemas.DeviceHealthReport], summary="List device health reports")
 def list_device_health_reports(
     *,

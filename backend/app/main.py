@@ -1,22 +1,22 @@
+import logging
+import os
+import sys
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-import os
+
 from app.api.v1.api import api_router
 from app.core.config import settings
 from app.db.schema import create_database_schema
 
-create_database_schema()
-
-import logging
-import sys
-
-# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[logging.StreamHandler(sys.stdout)]
+    handlers=[logging.StreamHandler(sys.stdout)],
 )
+
+create_database_schema()
 
 logger = logging.getLogger(__name__)
 

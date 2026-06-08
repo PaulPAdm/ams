@@ -84,14 +84,20 @@ def process_recent_peaks(db: Session, window_seconds: float = 0.5):
                 processed_ids.add(peaks[j].id)
         
         if len(current_event_peaks) >= 3:
-            # Found an event for triangulation!
             try:
                 perform_triangulation_for_event(db, current_event_peaks)
+            except Exception as e:
+                logger.error("Error during triangulation: %s", e)
+            finally:
                 for peak in current_event_peaks:
                     peak.processed = True
                 db.commit()
-            except Exception as e:
-                logger.error(f"Error during triangulation: {e}")
+        else:
+            # Not enough devices in this time window — mark as processed so they
+            # don't accumulate and slow down future triangulation queries.
+            for peak in current_event_peaks:
+                peak.processed = True
+            db.commit()
 
 def perform_triangulation_for_event(db: Session, event_peaks: List[models.Peak]):
     mic_coords_metric = []

@@ -139,5 +139,6 @@ storage/audio/events
 
 Backend przyjmuje:
 
-- `audio/wav` jako plik `.wav`,
-- inne dane binarne jako `.pcm16`.
+- normalny plik audio przez `multipart/form-data` w polu `file` (`.wav`, `.mp3`, `.ogg`, `.flac`, `.m4a`, `.aac`, `.webm`),
+- raw `PCM16LE` z urządzenia jako body requestu; backend zapisuje go jako plik `.wav`,
+- pobieranie audio przez `/api/devices/{device_id}/sound-events/{event_id}/audio/download`.
