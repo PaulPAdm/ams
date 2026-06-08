@@ -7,6 +7,8 @@ const toNumber = (value, fallback) => {
 
 export const appConfig = {
   htmlTitle: env.VITE_APP_HTML_TITLE || env.VITE_APP_TITLE || 'Urban Acoustic Grid',
+  appName: env.VITE_APP_TITLE || 'Acoustic Monitoring System',
+  appShortName: env.VITE_APP_SHORT_NAME || 'AMS',
   locale: env.VITE_APP_LOCALE || 'en-GB',
   apiBaseUrl: env.VITE_API_BASE_URL || '',
   mapboxToken: env.VITE_MAPBOX_TOKEN || '',
