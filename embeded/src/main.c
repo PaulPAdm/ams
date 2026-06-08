@@ -1,8 +1,10 @@
 #include <stdio.h>
 
+#include "hardware/watchdog.h"
 #include "pico/stdlib.h"
 
 #include "acoustic_runtime.h"
+#include "audio_calibration_runtime.h"
 #include "audio_stream_queue.h"
 #include "device_clock.h"
 #include "device_config.h"
@@ -14,6 +16,7 @@
 #include "network_runtime.h"
 #include "power_meter_service.h"
 #include "runtime_status.h"
+#include "sd_card_buffer.h"
 #include "server_health.h"
 #include "startup_helpers.h"
 #include "time_sync_runtime.h"
@@ -24,6 +27,9 @@ int main()
 {
     stdio_init_all();
     sleep_ms(250);
+
+    // 8-second timeout. Keeps device alive through Wi-Fi hangs and long uploads.
+    watchdog_enable(8000, true);
 
     power_meter_service_t power_meter_service;
     power_meter_service_init(&power_meter_service);
@@ -52,6 +58,19 @@ int main()
     print_current_settings(&config,
                            AUDIO_STREAM_QUEUE_INPUT_SAMPLE_RATE_HZ,
                            AUDIO_STREAM_QUEUE_DOWNSAMPLE_FACTOR);
+
+    if (run_mode == STARTUP_RUN_MODE_AUDIO_CALIBRATION)
+    {
+        audio_calibration_run_interactive(&config);
+        while (true)
+        {
+            sleep_ms(1000);
+        }
+    }
+
+    sd_card_buffer_t sd_card_buffer;
+    bool sd_card_ready = sd_card_buffer_run_startup_test(&sd_card_buffer);
+    runtime_status_set_sd_card_state(sd_card_ready ? DEVICE_COMPONENT_OK : DEVICE_COMPONENT_ERROR);
 
     device_wifi_state_t wifi_state = DEVICE_WIFI_SLEEP;
     bool microphone_ready = false;
@@ -109,7 +128,7 @@ int main()
                                microphone_ready);
 
     acoustic_runtime_t acoustic_runtime;
-    acoustic_runtime_init(&acoustic_runtime);
+    acoustic_runtime_init(&acoustic_runtime, &config.audio_calibration);
     microphone_ready = true;
     server_health_service_set_microphone_active(&server_health_service, microphone_ready);
 
@@ -123,6 +142,8 @@ int main()
 
     while (true)
     {
+        watchdog_update();
+
         runtime_iteration_run(&config,
                               &diagnostics_service,
                               &power_meter_service,
@@ -138,6 +159,7 @@ int main()
                                                    &config,
                                                    &diagnostics_service,
                                                    &power_meter_service,
+                                                   sd_card_ready ? &sd_card_buffer : NULL,
                                                    &runtime_status,
                                                    &wifi_state,
                                                    microphone_ready);
