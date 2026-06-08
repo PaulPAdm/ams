@@ -1,6 +1,15 @@
-from typing import Optional
+from typing import Any, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+
+UNKNOWN_VALUES = {"", "unknown", "unknow", "n/a", "na", "none", "null"}
+
+
+def _coerce_unknown(value: Any) -> Any:
+    if isinstance(value, str) and value.strip().lower() in UNKNOWN_VALUES:
+        return None
+    return value
 
 
 class DeviceHealthReportBase(BaseModel):
@@ -17,6 +26,19 @@ class DeviceHealthReportBase(BaseModel):
     computed_power_mw: Optional[float] = None
     audio_queue_depth: Optional[int] = Field(default=None, ge=0)
     audio_dropped_chunks: Optional[int] = Field(default=None, ge=0)
+
+    @field_validator(
+        "ina219_online",
+        "bus_voltage_v",
+        "shunt_voltage_mv",
+        "current_ma",
+        "power_mw",
+        "computed_power_mw",
+        mode="before",
+    )
+    @classmethod
+    def coerce_unknown_power_fields(cls, value: Any) -> Any:
+        return _coerce_unknown(value)
 
 
 class DeviceHealthReportCreate(DeviceHealthReportBase):
