@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 #include "device_runtime_config.h"
+#include "hardware/watchdog.h"
 #include "pico/stdlib.h"
 #include "runtime_status.h"
 #include "wifi_service.h"
@@ -44,6 +45,7 @@ void network_runtime_sleep_with_polling(uint32_t sleep_ms_total,
     absolute_time_t deadline = make_timeout_time_ms(sleep_ms_total);
     while (!time_reached(deadline))
     {
+        watchdog_update();
         runtime_iteration_run(config,
                               diagnostics_service,
                               power_meter_service,

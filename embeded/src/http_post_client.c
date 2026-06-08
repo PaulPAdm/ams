@@ -9,6 +9,7 @@
 #include "lwip/ip_addr.h"
 #include "lwip/pbuf.h"
 #include "lwip/tcpbase.h"
+#include "hardware/watchdog.h"
 #include "pico/cyw43_arch.h"
 #include "pico/stdlib.h"
 
@@ -438,6 +439,7 @@ bool http_post_client_post(const char *host,
     absolute_time_t deadline = make_timeout_time_ms(timeout_ms);
     while (!state.done && !time_reached(deadline))
     {
+        watchdog_update();
         sleep_ms(10);
     }
 
