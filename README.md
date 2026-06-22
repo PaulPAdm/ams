@@ -1,65 +1,67 @@
 # City Audio Monitor
 
-City Audio Monitor to system IoT do wykrywania podejrzanych zdarzeń akustycznych w przestrzeni miejskiej. Projekt składa się z urządzeń embedded z mikrofonami, backendu API, bazy danych PostGIS oraz aplikacji webowej dla operatora. Docelowy wariant uruchomieniowy zakłada działanie usług na VPS w kontenerach Docker, za bramką Nginx.
+> **Student project.** This repository was created for educational purposes as part of university coursework. It is not a production-grade system and is not intended for real deployment.
 
-## Główna idea
+City Audio Monitor is an IoT system for detecting suspicious acoustic events in urban spaces. The project consists of embedded devices with microphones, a backend API, a PostGIS database, and a web application for the operator. The target deployment runs the services on a VPS in Docker containers behind an Nginx gateway.
 
-Urzadzenia pomiarowe nasłuchują otoczenia lokalnie i wysyłają do serwera tylko istotne zdarzenia, zamiast przesyłać ciągły strumień audio. Backend zapisuje zdarzenia, status urządzeń i informacje o synchronizacji czasu. Gdy kilka urządzeń zarejestruje ten sam impuls w krótkim oknie czasowym, backend może wyznaczyć przybliżoną lokalizację źródła dźwięku metodą TDOA.
+## Core idea
 
-Frontend pokazuje urządzenia i incydenty na mapie oraz udostępnia panel administracyjny do obsługi czujników i danych systemowych.
+Measurement devices listen to their surroundings locally and send only relevant events to the server, instead of streaming continuous audio. The backend stores events, device status, and time-synchronization information. When several devices register the same impulse within a short time window, the backend can estimate the approximate location of the sound source using the TDOA (Time Difference of Arrival) method.
 
-## Struktura repozytorium
+The frontend shows devices and incidents on a map and provides an admin panel for managing sensors and system data.
+
+## Repository structure
 
 ```text
 ams/
-├── backend/    # FastAPI, SQLAlchemy, PostGIS, logika zdarzeń i triangulacji
-├── frontend/   # React + Vite, mapa operatora i panel administracyjny
-├── embeded/    # firmware Raspberry Pi Pico 2 W
-├── docs/       # raporty PDF i schematy PlantUML/SVG
+├── backend/    # FastAPI, SQLAlchemy, PostGIS, event and triangulation logic
+├── frontend/   # React + Vite, operator map and admin panel
+├── embeded/    # Raspberry Pi Pico 2 W firmware
+├── docs/       # PDF reports and PlantUML/SVG diagrams
 ├── docker-compose.yml
 └── nginx.conf
 ```
 
-Katalog `presentation/` zawiera materiały pomocnicze i nie jest główną częścią aktualnej architektury systemu.
+The `presentation/` directory contains supporting materials and is not a core part of the current system architecture.
 
-## Architektura
+## Architecture
 
-Najważniejsze elementy:
+Main components:
 
-- `embeded` - urządzenie Pico 2 W z mikrofonem I2S, wyświetlaczem e-paper, pomiarem zasilania INA219 i buforem audio.
-- `backend` - API FastAPI obsługujące urządzenia, health reports, synchronizację czasu, zdarzenia dźwiękowe i incydenty.
-- `db` - PostgreSQL z rozszerzeniem PostGIS do przechowywania lokalizacji urządzeń i incydentów.
-- `frontend` - aplikacja webowa z mapą, markerami czujników, powiadomieniami o incydentach i panelem admina.
-- `gateway` - Nginx kierujący ruch do backendu i frontendu.
+- `embeded` — Pico 2 W device with an I2S microphone, an e-paper display, INA219 power monitoring, and an audio buffer.
+- `backend` — FastAPI API handling devices, health reports, time synchronization, sound events, and incidents.
+- `db` — PostgreSQL with the PostGIS extension for storing device and incident locations.
+- `frontend` — web application with a map, sensor markers, incident notifications, and an admin panel.
+- `gateway` — Nginx routing traffic to the backend and frontend.
 
-Schematy architektury znajdują się w [docs/diagrams](docs/diagrams).
+Architecture diagrams are available in [docs/diagrams](docs/diagrams).
 
-## Szybkie uruchomienie
+## Quick start
 
-Wymagania:
+Requirements:
 
-- Docker i Docker Compose
-- wolny port `80`
-- token Mapbox dla pełnego działania mapy
+- Docker and Docker Compose
+- a free port `80`
+- a Mapbox token for full map functionality
 
-Uruchomienie całego stacka:
+Start the whole stack:
 
 ```powershell
 docker compose up --build
 ```
 
-Po starcie:
+After startup:
 
-- aplikacja webowa: `http://localhost/`
-- panel admina: `http://localhost/admin/`
-- healthcheck backendu: `http://localhost/api/health`
-- dokumentacja OpenAPI: `http://localhost/api/docs`
+- web application: `http://localhost/`
+- admin panel: `http://localhost/admin/`
+- backend health check: `http://localhost/api/health`
+- OpenAPI documentation: `http://localhost/api/docs`
 
-Domyślna baza danych jest tworzona w kontenerze `postgis/postgis:15-3.3`. Backend tworzy brakujące tabele przy starcie, bez automatycznego usuwania istniejących danych.
+The default database is created in the `postgis/postgis:15-3.3` container. The backend creates missing tables on startup without automatically dropping existing data.
 
-## Konfiguracja
+## Configuration
 
-Najważniejsze zmienne:
+Key variables:
 
 ```text
 POSTGRES_USER
@@ -74,44 +76,44 @@ VITE_MAP_CENTER_LON
 VITE_MAP_ZOOM
 ```
 
-W trybie Docker większość ustawień bazy jest ustawiana w `docker-compose.yml`. Dla lokalnej pracy backendu poza Dockerem trzeba podać `DATABASE_URL`.
+In Docker mode, most database settings are defined in `docker-compose.yml`. To run the backend locally outside Docker, you must provide `DATABASE_URL`.
 
-## Główne API
+## Main API
 
-Backend działa pod prefiksem `/api`.
+The backend is served under the `/api` prefix.
 
-- `GET /api/health` - sprawdzenie działania backendu.
-- `/api/devices` - rejestracja, lista, edycja i usuwanie urządzeń.
-- `/api/devices/{device_id}/time/sync` - synchronizacja czasu urządzenia.
-- `/api/devices/{device_id}/health` - raporty stanu urządzenia.
-- `/api/devices/{device_id}/sound-events` - zdarzenia dźwiękowe wykryte lokalnie.
-- `/api/devices/{device_id}/sound-events/{event_id}/audio` - upload fragmentu audio dla zdarzenia.
-- `/api/suspicious_incidents` - lista i obsługa incydentów.
+- `GET /api/health` — backend liveness check.
+- `/api/devices` — register, list, edit, and delete devices.
+- `/api/devices/{device_id}/time/sync` — device time synchronization.
+- `/api/devices/{device_id}/health` — device health reports.
+- `/api/devices/{device_id}/sound-events` — sound events detected locally.
+- `/api/devices/{device_id}/sound-events/{event_id}/audio` — upload an audio fragment for an event.
+- `/api/suspicious_incidents` — list and manage incidents.
 
-Szczegóły pól request/response są dostępne w Swagger UI pod `/api/docs`.
+Request/response field details are available in the Swagger UI at `/api/docs`.
 
-## Dokumentacja
+## Documentation
 
-Dokumentacja projektowa znajduje się w [docs](docs):
+Project documentation is available in [docs](docs):
 
-- raporty PDF z kolejnych etapów pracy,
-- schemat ogólnej architektury,
-- schemat logiki urządzenia embedded,
-- schemat logiki backendu,
-- pliki źródłowe PlantUML.
+- PDF reports from the successive stages of the work,
+- general architecture diagram,
+- embedded device logic diagram,
+- backend logic diagram,
+- PlantUML source files.
 
-## Praca nad komponentami
+## Working on individual components
 
-Dokumentacja poszczególnych części:
+Documentation for the individual parts:
 
 - [backend/README.md](backend/README.md)
 - [frontend/README.md](frontend/README.md)
 - [embeded/README.md](embeded/README.md)
 - [docs/README.md](docs/README.md)
 
-## Uwagi projektowe
+## Design notes
 
-- System preferuje przepływ event-first: urządzenie wysyła zdarzenie i opcjonalny fragment audio, a nie stały strumień.
-- Synchronizacja czasu jest istotna dla triangulacji TDOA.
-- VPS jest naturalnym miejscem wdrożenia, ponieważ frontend, backend, baza i gateway mogą działać jako jeden stack Docker Compose.
-- Aplikacja mobilna może korzystać z tego samego modelu API co urządzenia embedded.
+- The system favors an event-first flow: a device sends an event and an optional audio fragment, rather than a constant stream.
+- Time synchronization is important for TDOA triangulation.
+- A VPS is a natural deployment target, since the frontend, backend, database, and gateway can run as a single Docker Compose stack.
+- A mobile application could use the same API model as the embedded devices.
