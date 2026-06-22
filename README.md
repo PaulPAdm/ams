@@ -117,3 +117,7 @@ Documentation for the individual parts:
 - Time synchronization is important for TDOA triangulation.
 - A VPS is a natural deployment target, since the frontend, backend, database, and gateway can run as a single Docker Compose stack.
 - A mobile application could use the same API model as the embedded devices.
+
+## License
+
+This project is licensed under the [MIT License](LICENSE). The software is provided "as is", without warranty of any kind.
