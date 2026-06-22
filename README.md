@@ -120,4 +120,4 @@ Documentation for the individual parts:
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE). The software is provided "as is", without warranty of any kind.
+This project is licensed under the [CRAPL](LICENSE) (Community Research and Academic Programming License) — a license tailored to academic and student code. The software is provided "as is", without warranty of any kind, and you agree to hold the author free from shame, embarrassment, or ridicule for any hacks or kludges found within.
